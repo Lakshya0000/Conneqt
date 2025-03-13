@@ -50,7 +50,6 @@ export default function RootLayout({ children }) {
               fontStack: 'system',
               overlayBlur: 'small',
             })}>
-              <ConnectButton/>
               {children}
             </RainbowKitProvider>
           </QueryClientProvider>
