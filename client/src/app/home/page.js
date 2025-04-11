@@ -1,10 +1,14 @@
-'use client';
-
+"use client";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { motion } from 'framer-motion';
 import { Network, HeartPulse, Shield, Lightbulb, ArrowRight, ChevronDown } from 'lucide-react';
 import DNAAnimation from '../components/DnaAnimation';
 
 export default function Home() {
+
+  const router = useRouter();
+
   const fadeInUp = {
     initial: { opacity: 0, y: 20 },
     animate: { opacity: 1, y: 0 },
@@ -23,64 +27,58 @@ export default function Home() {
     <div className="min-h-screen bg-transparent text-white overflow-x-hidden relative">
       <DNAAnimation />
       
-      {/* Navigation */}
-      <motion.nav 
-        initial={{ y: -100 }}
-        animate={{ y: 0 }}
-        transition={{ duration: 0.6 }}
-        className="fixed top-0 w-full bg-opacity-10 bg-black backdrop-blur-lg z-10"
+     {/* Navigation */}
+     <motion.nav 
+  initial={{ y: -100 }}
+  animate={{ y: 0 }}
+  transition={{ duration: 0.6 }}
+  className="fixed top-0 left-0 w-full bg-black backdrop-blur-md z-50 shadow-lg"
+>
+  <div className="container mx-auto px-6 py-4">
+    <div className="flex items-center justify-between">
+      <motion.div 
+        className="flex items-center space-x-2 group"
+        whileHover={{ scale: 1.05 }}
       >
-        <div className="container mx-auto px-6 py-4">
-          <div className="flex items-center justify-between">
-            <motion.div 
-              className="flex items-center space-x-2 group"
-              whileHover={{ scale: 1.05 }}
+        <Link href="/">
+          <div className="relative cursor-pointer flex items-center">
+            <Network className="w-8 h-8 text-purple-500 transition-transform group-hover:rotate-180 duration-700" />
+            <span 
+              className="ml-2 text-xl font-bold bg-gradient-to-r from-purple-400 to-pink-600 bg-clip-text text-transparent"
             >
-              <div className="relative">
-                <Network className="w-8 h-8 text-purple-500 transform transition-transform group-hover:rotate-180 duration-700" />
-                <div className="absolute inset-0 bg-purple-500 rounded-full blur opacity-50 group-hover:opacity-75 transition-opacity"></div>
-              </div>
-              <motion.span 
-                className="text-xl font-bold bg-gradient-to-r from-purple-400 to-pink-600 bg-clip-text text-transparent"
-                animate={{ opacity: [0.5, 1, 0.5] }}
-                transition={{ duration: 2, repeat: Infinity }}
-              >
-                Conneqt
-              </motion.span>
-            </motion.div>
-            <div className="hidden md:flex space-x-8">
-              <motion.a 
-                href="#how-it-works" 
-                className="hover:text-purple-400 transition-colors"
-                whileHover={{ scale: 1.1 }}
-              >
-                How It Works
-              </motion.a>
-              <motion.a 
-                href="#projects" 
-                className="hover:text-purple-400 transition-colors"
-                whileHover={{ scale: 1.1 }}
-              >
-                Projects
-              </motion.a>
-              <motion.a 
-                href="#collaboration" 
-                className="hover:text-purple-400 transition-colors"
-                whileHover={{ scale: 1.1 }}
-              >
-                Collaboration
-              </motion.a>
-              <motion.button 
-                className="px-6 py-2 bg-purple-600 rounded-full hover:bg-purple-700 transition-all transform hover:shadow-lg hover:shadow-purple-500/25"
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-              >
-                Connect Wallet
-              </motion.button>
-            </div>
+              Conneqt
+            </span>
           </div>
-        </div>
-      </motion.nav>
+        </Link>
+      </motion.div>
+      <div className="hidden md:flex space-x-8">
+        <Link href="#how-it-works">
+          <motion className="hover:text-purple-400 transition-colors" >
+            How It Works
+          </motion>
+        </Link>
+        <Link href="#projects">
+          <motion className="hover:text-purple-400 transition-colors" >
+            Projects
+          </motion>
+        </Link>
+        <Link href="#collaboration">
+          <motion className="hover:text-purple-400 transition-colors" >
+            Collaboration
+          </motion>
+        </Link>
+        <motion.button 
+          className="px-6 py-2 bg-purple-600 rounded-full hover:bg-purple-700 transition-all transform hover:shadow-lg hover:shadow-purple-500/25 hover:cursor-pointer"
+          whileHover={{ scale: 1.05 }}
+          whileTap={{ scale: 0.95 }}
+          onClick={() => router.push("/")}
+        >
+          Connect Wallet
+        </motion.button>
+      </div>
+    </div>
+  </div>
+</motion.nav>
 
       {/* Content wrapper with higher z-index */}
       <div className="relative z-10">
