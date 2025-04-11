@@ -1,3 +1,6 @@
 [submodule "conneqt/lib/forge-std"]
 	path = conneqt/lib/forge-std
 	url = https://github.com/foundry-rs/forge-std
+[submodule "conneqt/lib/openzeppelin-contracts"]
+	path = conneqt/lib/openzeppelin-contracts
+	url = https://github.com/OpenZeppelin/openzeppelin-contracts
