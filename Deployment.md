@@ -1,0 +1,4 @@
+DeSciToken deployed at: 0xb0470519c6011F0B676B09D2D807d71Ea44c2443
+ResearchCollab deployed at: 0x0E58d6b79FFCe1141F9De389CA8A2c796F2e266e
+ResearchCompany deployed at: 0xa9932205542cE9c18cB23ad17a63539Af95c5f41
+ResearchEscrow deployed at: 0x63B721F5FC7f147279a4f1C995627eEa330BC426
