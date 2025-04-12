@@ -1,4 +1,6 @@
-import {
+
+
+export {
   createProfile,
   createCommunity,
   joinCompany,
@@ -19,4 +21,8 @@ import {
   getLatestResearch,
   updateResearch,
   createResearch,
+
 } from "./function";
+
+
+export {uploadToIpfs} from "./pinata"
