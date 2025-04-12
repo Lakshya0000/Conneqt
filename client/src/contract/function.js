@@ -125,6 +125,78 @@ export const getCompanyOfProposal = async (proposalId) => {
     }
 }
 
+
+// ...existing code...
+
+export const getCompany = async (companyId) => {
+    try {
+        const data = useReadContract({
+            address: companyAddress,
+            abi: companyABI,
+            functionName: 'getCompany',
+            args: [companyId]
+        })
+        return {
+            id: data[0],
+            name: data[1],
+            owner: data[2],
+            proposals: data[3],
+            researchList: data[4]
+        }
+    } catch (error) {
+        console.error("Error fetching company:", error)
+        throw error
+    }
+}
+
+export const getProfile = async (userAddress) => {
+    try {
+        const data = useReadContract({
+            address: companyAddress,
+            abi: companyABI,
+            functionName: 'getProfile',
+            args: [userAddress]
+        })
+        return {
+            userId: data[0],
+            profileURI: data[1]
+        }
+    } catch (error) {
+        console.error("Error fetching profile:", error)
+        throw error
+    }
+}
+
+export const getUserId = async (userAddress) => {
+    try {
+        const data = useReadContract({
+            address: companyAddress,
+            abi: companyABI,
+            functionName: 'getUserId',
+            args: [userAddress]
+        })
+        return data
+    } catch (error) {
+        console.error("Error fetching user ID:", error)
+        throw error
+    }
+}
+
+export const isMemberOfCompany = async (companyId, userId) => {
+    try {
+        const data = useReadContract({
+            address: companyAddress,
+            abi: companyABI,
+            functionName: 'isMemberOfCompany',
+            args: [companyId, userId]
+        })
+        return data
+    } catch (error) {
+        console.error("Error checking company membership:", error)
+        throw error
+    }
+}
+
 export const startResearchCrowdfunding = async (title, targetAmount, duration) => {
     try {
         const tx = writeContract({
