@@ -14,6 +14,7 @@ import DNAAnimation from '@/app/components/DnaAnimation'
 import { ConnectButton } from '@rainbow-me/rainbowkit'
 import { useAccount } from 'wagmi'
 import { useEffect } from 'react'
+import { OnBoarding } from '../components/OnBoarding'
 
 export default function Home() {
   const router = useRouter()
@@ -81,13 +82,10 @@ export default function Home() {
       </motion.nav>
 
       {/* Content wrapper with higher z-index */}
-      <div className='relative z-10'>
-        {/* Hero Section */}
-
-        {/* How It Works */}
-
+      <div className='z-10 flex w-full h-screen  items-center justify-center'>
+        <OnBoarding/>
         {/* Live Projects */}
-        <section
+        {/* <section
           id='projects'
           className='py-20 px-6 '>
           <div className='container mx-auto'>
@@ -163,9 +161,9 @@ export default function Home() {
                   </div>
                 </motion.div>
               ))}
-            </motion.div>
+            </motion.div> 
           </div>
-        </section>
+        </section> */}
       </div>
     </div>
   )
