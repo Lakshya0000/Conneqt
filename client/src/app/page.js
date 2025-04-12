@@ -43,7 +43,7 @@ export default function Home() {
       <DNAAnimation />
 
       {/* Navigation */}
-      <motion.nav
+      {/* <motion.nav
         initial={{ y: -100 }}
         animate={{ y: 0 }}
         transition={{ duration: 0.6 }}
@@ -81,14 +81,14 @@ export default function Home() {
             </div>
           </div>
         </div>
-      </motion.nav>
+      </motion.nav> */}
 
       {/* Content wrapper with higher z-index */}
       <div className='relative z-10'>
         {/* Hero Section */}
         <HeroSection isLanding={true} />
         {/* How It Works */}
-        <section
+        {/* <section
           id='how-it-works'
           className='py-20 px-6'>
           <div className='container mx-auto'>
@@ -141,10 +141,10 @@ export default function Home() {
               ))}
             </motion.div>
           </div>
-        </section>
+        </section> */}
 
         {/* Live Projects */}
-        <section
+        {/* <section
           id='projects'
           className='py-20 px-6 bg-gradient-to-b from-transparent to-purple-900/20'>
           <div className='container mx-auto'>
@@ -222,7 +222,7 @@ export default function Home() {
               ))}
             </motion.div>
           </div>
-        </section>
+        </section> */}
       </div>
     </div>
   )
