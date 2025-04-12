@@ -1,6 +1,6 @@
 "use client"
 
-
+import axios from "axios"
 import { useState, useEffect, useRef } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -8,19 +8,106 @@ import { Avatar } from "@/components/ui/avatar"
 import { Card } from "@/components/ui/card"
 import { MessageCircle, User, Upload, UserRound } from "lucide-react"
 import Image from "next/image"
-
+import {createProfile} from '../../contract/index'
 export function OnBoarding() {
   const [messages, setMessages] = useState([])
   const [currentStep, setCurrentStep] = useState("name")
   const [input, setInput] = useState("")
-  const [isTyping, setIsTyping] = useState(false)
+  const [isTyping, setIsTyping] = useState(false);
+  const [loading, setLoading] = useState(false);
+
   const [userData, setUserData] = useState({
     name: "",
-    imageUrl: null,
+    imageUrl: "",
     role: null,
   })
+  const [imghsh, setImghsh]=useState("");
+  const [imgLoader, setImgLoader]=useState(false);
   const messagesEndRef = useRef(null)
   const fileInputRef = useRef(null)
+
+
+  const uploadImageIPFS=async (event)=>{
+    event.preventDefault();
+    console.log("File input changed", event);
+    const file =event.target.files[0];
+    if(!file){
+      console.log("Enter file");return;
+    }
+
+    const formData=new FormData()
+    formData.append('file', file);
+    const metaData=JSON.stringify({
+      name:file.name
+    })
+    formData.append("pinataMetadata",metaData);
+    try{
+      setImgLoader(true);
+      const res = await axios({
+        method: "post",
+        url: "https://api.pinata.cloud/pinning/pinFileToIPFS",
+        data: formData,
+        headers: {
+          pinata_api_key: `35cb1bf7be19d2a8fa0d`,
+          pinata_secret_api_key: `2c2e9e43bca7a619154cb48e8b060c5643ea6220d0b7c9deb565fa491b3b3a50`,
+          "Content-Type": "multipart/form-data",
+        },
+      });
+
+      const resData=res.data;
+      setUserData((prev) => ({
+        ...prev,
+        imageUrl: `https://ipfs.io/ipfs/${resData.IpfsHash}`,
+      }));
+      setImgLoader(false);
+    }catch(error){
+      setImgLoader(false);
+      window.alert("ipfs image upload error : ", error);
+    }
+  }
+
+  const mintProfile = async (event) => {
+    if (!userData) return;
+
+    try {
+       setLoading(true);
+        const data = JSON.stringify({
+            name: userData.name,
+            imageUrl: userData.imageUrl,
+            role: userData.role,
+        });
+
+        console.log("Uploading to IPFS:", data);
+
+        const res = await axios({
+            method: "post",
+            url: "https://api.pinata.cloud/pinning/pinJSONToIPFS",
+            data: data,
+            headers: {
+                pinata_api_key: `35cb1bf7be19d2a8fa0d`,
+                pinata_secret_api_key: `2c2e9e43bca7a619154cb48e8b060c5643ea6220d0b7c9deb565fa491b3b3a50`,
+                "Content-Type": "application/json",
+            },
+        });
+
+        const resData = res.data;
+        console.log("IPFS Response:", resData);
+
+        
+        
+        const tx = await createProfile(`https://ipfs.io/ipfs/${resData.IpfsHash}`);
+        await tx.wait();
+        console.log("Profile successfully minted!");
+        setLoading(false);
+        window.alert("Profile minted successfully!");
+    
+        
+    } catch (error) {
+        setLoading(false);
+        console.error("Minting error:", error);
+        window.alert("Minting error: " + (error.response?.data?.error || error.message));
+    }
+};
 
   // Initial message when component mounts
   useEffect(() => {
@@ -71,15 +158,21 @@ export function OnBoarding() {
 
   const handleSubmit = (e) => {
     e.preventDefault()
-    if (!input.trim() && currentStep !== "image") return
+    // if (!input.trim() ) return
 
     if (currentStep === "name") {
-      addMessage(input, "user")
-      setUserData({ ...userData, name: input })
+      // Save the input value to use later
+      const nameValue = input
+      addMessage(nameValue, "user")
+      setUserData({ ...userData, name: nameValue })
       setInput("")
 
       setTimeout(() => {
-        addMessage("Nice to meet you, " + input + "! Could you please upload a profile picture?", "ai", 1000)
+        addMessage(
+          "Nice to meet you, " + nameValue + "! Could you please upload a profile picture?",
+          "ai",
+          1000,
+        )
         setCurrentStep("image")
       }, 500)
     }
@@ -191,37 +284,40 @@ export function OnBoarding() {
           </form>
         )}
 
-        {currentStep === "image" && (
-          <div className="flex flex-col gap-3">
-            <input type="file" ref={fileInputRef} onChange={handleFileChange} accept="image/*" className="hidden" />
-
-            {userData.imageUrl ? (
-              <div className="flex items-center gap-3">
-                <div className="relative w-16 h-16 rounded-full overflow-hidden border-2 border-purple-400">
-                  <Image
-                    src={userData.imageUrl || "/placeholder.svg"}
-                    alt="Profile preview"
-                    fill
-                    className="object-cover"
-                  />
-                </div>
-                <Button
-                  onClick={triggerFileInput}
-                  variant="outline"
-                  size="sm"
-                  className="border-purple-400/50 text-purple-400 hover:bg-purple-400/10"
-                >
-                  Change Image
-                </Button>
-              </div>
-            ) : (
-              <Button onClick={triggerFileInput} className="flex items-center gap-2 bg-purple-600 hover:bg-purple-700">
-                <Upload className="h-4 w-4" />
-                Upload Profile Picture
-              </Button>
-            )}
-          </div>
-        )}
+{currentStep === "image" && (
+  <div className="flex flex-col gap-3">
+    {/* Hidden input */}
+    <input 
+      type="file" 
+      ref={fileInputRef} 
+      onChange={uploadImageIPFS} 
+      accept="image/*" 
+      className="hidden" 
+    />
+    
+    {/* Simple direct upload button */}
+    <div className="flex items-center justify-center gap-4">
+      {userData.imageUrl && (
+        <div className="relative w-16 h-16 rounded-full overflow-hidden border-2 border-purple-400">
+          <Image
+            src={userData.imageUrl}
+            alt="Profile preview"
+            fill
+            className="object-cover"
+          />
+        </div>
+      )}
+      
+      <Button 
+        onClick={triggerFileInput} 
+        className="flex items-center gap-2 bg-purple-600 hover:bg-purple-700"
+      >
+        <Upload className="h-4 w-4" />
+        {userData.imageUrl ? "Change Image" : "Upload Profile Picture"}
+      </Button>
+    </div>
+  </div>
+)}
 
         {currentStep === "role" && (
           <div className="grid grid-cols-3 gap-3">
@@ -253,10 +349,15 @@ export function OnBoarding() {
             </Button>
           </div>
         )}
-
+          
         {currentStep === "complete" && (
           <div className="flex justify-center">
-            <Button className="px-8 bg-purple-600 hover:bg-purple-700">Continue to Dashboard</Button>
+            <Button 
+            onClick={mintProfile}
+            className="px-8 bg-purple-600 hover:bg-purple-700">Continue to Dashboard</Button>
+            <Button 
+            onClick={mintProfile}
+            className="px-8 bg-purple-600 hover:bg-purple-700">Continue to Dashboard</Button>
           </div>
         )}
       </div>

@@ -8,10 +8,10 @@ import { companyAddress } from '@/contract/contract'
 import { escrowABI } from '@/contract/contract'
 import { escrowAddress } from '@/contract/contract'
 
-const {writeContract} = useWriteContract()
 
 export const createProfile = async(profileURI)=>{
     try {
+        const {writeContract} = useWriteContract()
         const tx = writeContract({
             address:companyAddress,
             abi:companyABI,
@@ -27,6 +27,7 @@ export const createProfile = async(profileURI)=>{
 }
 export const createCommunity =async(companyURI)=>{
     try {
+        const {writeContract} = useWriteContract()
         const tx = writeContract({
             address:companyAddress,
             abi:companyABI,
@@ -43,6 +44,7 @@ export const createCommunity =async(companyURI)=>{
 }
 export const joinCompany = async(communityId)=>{
     try {
+        const {writeContract} = useWriteContract()
         const  tx = writeContract({
             address:companyAddress,
             abi:companyABI,
@@ -59,6 +61,7 @@ export const joinCompany = async(communityId)=>{
 
 export const raiseProposal = async (companyId, description, researchURI) => {
     try {
+        const {writeContract} = useWriteContract()
         const tx = writeContract({
             address: companyAddress,
             abi: companyABI,
@@ -74,6 +77,7 @@ export const raiseProposal = async (companyId, description, researchURI) => {
 
 export const voteOnProposal = async (proposalId, inFavor) => {
     try {
+        const {writeContract} = useWriteContract()
         const tx = writeContract({
             address: companyAddress,
             abi: companyABI,
