@@ -12,7 +12,7 @@ import {
 } from 'lucide-react'
 import DNAAnimation from '@/app/components/DnaAnimation'
 import { ConnectButton } from '@rainbow-me/rainbowkit'
-import { injected, useAccount, useConnect } from 'wagmi'
+import { useAccount } from 'wagmi'
 import { useEffect } from 'react'
 
 export default function Home() {
