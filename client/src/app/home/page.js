@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import { motion } from 'framer-motion';
 import { Network, HeartPulse, Shield, Lightbulb, ArrowRight, ChevronDown } from 'lucide-react';
 import DNAAnimation from '../components/DnaAnimation';
+import { ConnectButton } from "@rainbow-me/rainbowkit";
 
 export default function Home() {
 
@@ -67,14 +68,9 @@ export default function Home() {
             Collaboration
           </motion>
         </Link>
-        <motion.button 
-          className="px-6 py-2 bg-purple-600 rounded-full hover:bg-purple-700 transition-all transform hover:shadow-lg hover:shadow-purple-500/25 hover:cursor-pointer"
-          whileHover={{ scale: 1.05 }}
-          whileTap={{ scale: 0.95 }}
-          onClick={() => router.push("/")}
-        >
-          Connect Wallet
-        </motion.button>
+        <div>
+          <ConnectButton/>
+        </div>
       </div>
     </div>
   </div>
