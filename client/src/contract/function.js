@@ -124,3 +124,223 @@ export const getCompanyOfProposal = async (proposalId) => {
         throw error
     }
 }
+
+export const startResearchCrowdfunding = async (title, targetAmount, duration) => {
+    try {
+        const tx = writeContract({
+            address: escrowAddress,
+            abi: escrowABI,
+            functionName: 'startResearchCrowdfunding',
+            args: [title, targetAmount, duration]
+        })
+        console.log("Research crowdfunding started successfully")
+        return tx
+    } catch (error) {
+        console.error("Error starting crowdfunding:", error)
+        throw error
+    }
+}
+
+export const contributeToResearch = async (projectId, amount) => {
+    try {
+        const tx =  writeContract({
+            address: escrowAddress,
+            abi: escrowABI,
+            functionName: 'contributeToResearch',
+            args: [projectId],
+            value: amount
+        })
+        console.log("Contribution successful")
+        return tx
+    } catch (error) {
+        console.error("Error contributing to research:", error)
+        throw error
+    }
+}
+
+export const releaseFunds = async (projectId) => {
+    try {
+        const tx = writeContract({
+            address: escrowAddress,
+            abi: escrowABI,
+            functionName: 'releaseFunds',
+            args: [projectId]
+        })
+        console.log("Funds released successfully")
+        return tx
+    } catch (error) {
+        console.error("Error releasing funds:", error)
+        throw error
+    }
+}
+
+export const claimRefund = async (projectId) => {
+    try {
+        const tx = writeContract({
+            address: escrowAddress,
+            abi: escrowABI,
+            functionName: 'claimRefund',
+            args: [projectId]
+        })
+        console.log("Refund claimed successfully")
+        return tx
+    } catch (error) {
+        console.error("Error claiming refund:", error)
+        throw error
+    }
+}
+
+export const getResearchProject = async (projectId) => {
+    try {
+        const data = useReadContract({
+            address: escrowAddress,
+            abi: escrowABI,
+            functionName: 'getResearchProject',
+            args: [projectId]
+        })
+        return {
+            title: data[0],
+            creator: data[1],
+            targetAmount: data[2],
+            currentAmount: data[3],
+            deadline: data[4],
+            funded: data[5],
+            fundsReleased: data[6]
+        }
+    } catch (error) {
+        console.error("Error fetching research project:", error)
+        throw error
+    }
+}
+
+export const getUserContribution = async (projectId, userAddress) => {
+    try {
+        const data = useReadContract({
+            address: escrowAddress,
+            abi: escrowABI,
+            functionName: 'getUserContribution',
+            args: [projectId, userAddress]
+        })
+        return data
+    } catch (error) {
+        console.error("Error fetching user contribution:", error)
+        throw error
+    }
+}
+
+// ...existing code...
+
+export const createResearch = async (title, metadataURI) => {
+    try {
+        const tx =  writeContract({
+            address: collabAddress,
+            abi: collabABI,
+            functionName: 'createResearch',
+            args: [title, metadataURI]
+        })
+        console.log("Research created successfully")
+        return tx
+    } catch (error) {
+        console.error("Error creating research:", error)
+        throw error
+    }
+}
+
+export const updateResearch = async (tokenId, newMetadataURI) => {
+    try {
+        const tx = writeContract({
+            address: collabAddress,
+            abi: collabABI,
+            functionName: 'updateResearch',
+            args: [tokenId, newMetadataURI]
+        })
+        console.log("Research updated successfully")
+        return tx
+    } catch (error) {
+        console.error("Error updating research:", error)
+        throw error
+    }
+}
+
+export const getLatestResearch = async (tokenId) => {
+    try {
+        const data = useReadContract({
+            address: collabAddress,
+            abi: collabABI,
+            functionName: 'getLatestResearch',
+            args: [tokenId]
+        })
+        return {
+            title: data[0],
+            metadataURI: data[1],
+            currentVersion: data[2]
+        }
+    } catch (error) {
+        console.error("Error fetching latest research:", error)
+        throw error
+    }
+}
+
+export const getResearchVersion = async (tokenId, version) => {
+    try {
+        const data = useReadContract({
+            address: collabAddress,
+            abi: collabABI,
+            functionName: 'getResearchVersion',
+            args: [tokenId, version]
+        })
+        return data
+    } catch (error) {
+        console.error("Error fetching research version:", error)
+        throw error
+    }
+}
+
+export const assignCollaborator = async (tokenId, collaborator, expires) => {
+    try {
+        const tx = writeContract({
+            address: collabAddress,
+            abi: collabABI,
+            functionName: 'assignCollaborator',
+            args: [tokenId, collaborator, expires]
+        })
+        console.log("Collaborator assigned successfully")
+        return tx
+    } catch (error) {
+        console.error("Error assigning collaborator:", error)
+        throw error
+    }
+}
+
+export const getCollaborations = async (userAddress) => {
+    try {
+        const data =  useReadContract({
+            address: collabAddress,
+            abi: collabABI,
+            functionName: 'getCollaborations',
+            args: [userAddress]
+        })
+        return data
+    } catch (error) {
+        console.error("Error fetching collaborations:", error)
+        throw error
+    }
+}
+
+export const isOwnerOrCollaborator = async (tokenId, account) => {
+    try {
+        const data =  useReadContract({
+            address: collabAddress,
+            abi: collabABI,
+            functionName: '_isOwnerOrCollaborator',
+            args: [tokenId, account]
+        })
+        return data
+    } catch (error) {
+        console.error("Error checking ownership/collaboration:", error)
+        throw error
+    }
+}
+
+
+
