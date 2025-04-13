@@ -8,10 +8,10 @@ export const collabABI = collabAbi.abi;
 export const companyABI = companyAbi.abi;
 export const escrowABI = escrowAbi.abi;
 
-export const desciAddress = "0xb0470519c6011F0B676B09D2D807d71Ea44c2443"
-export const collabAddress = "0x0E58d6b79FFCe1141F9De389CA8A2c796F2e266e"
-export const companyAddress = "0xa9932205542cE9c18cB23ad17a63539Af95c5f41"
-export const escrowAddress = "0x63B721F5FC7f147279a4f1C995627eEa330BC426"
+export const desciAddress = "0x7B803267E28915C5E56f39487e925ADC1a5E5db2"
+export const collabAddress = "0xF2082de504884e19514d81a9c452929A8E559E5c"
+export const companyAddress = "0x4C0ce849bB2d168B56a5a18b1028E05E560C8991"
+export const escrowAddress = "0xb751AB07938723691c0BdEa570F85ab27a4cE7b4"
 
 
 
