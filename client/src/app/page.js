@@ -11,7 +11,6 @@ import {
   ChevronDown,
 } from 'lucide-react'
 import DNAAnimation from '@/app/components/DnaAnimation'
-import { ConnectButton } from '@rainbow-me/rainbowkit'
 import { useAccount } from 'wagmi'
 import { useEffect } from 'react'
 import { HeroSection } from './components'

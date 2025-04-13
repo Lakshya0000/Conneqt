@@ -1,6 +1,5 @@
 import { motion } from 'framer-motion'
 import { ChevronDown } from 'lucide-react'
-import { ConnectButton } from '@rainbow-me/rainbowkit'
 import { fadeInUp, staggerChildren } from './'
 
 export default function HeroSection({ isLanding }) {
@@ -37,28 +36,13 @@ export default function HeroSection({ isLanding }) {
         className='flex flex-col md:flex-row gap-4 justify-center'
         variants={fadeInUp}>
         {isLanding && (
-          <ConnectButton.Custom>
-            {({ account, chain, mounted, openConnectModal }) => {
-              const connected = mounted && account && chain
-              return (
-                <>
-                  {(() => {
-                    if (!connected) {
-                      return (
-                        <motion.button
-                          className='px-8 py-4 bg-gradient-to-r from-purple-600 to-pink-600 rounded-full text-lg font-semibold hover:from-purple-700 hover:to-pink-700 transition-all transform hover:shadow-lg hover:shadow-purple-500/25 cursor-pointer'
-                          whileHover={{ scale: 1.05 }}
-                          whileTap={{ scale: 0.95 }}
-                          onClick={openConnectModal}>
-                          Connect Wallet
-                        </motion.button>
-                      )
-                    }
-                  })()}
-                </>
-              )
-            }}
-          </ConnectButton.Custom>
+          <motion.button
+          className='px-8 py-4 bg-gradient-to-r from-purple-600 to-pink-600 rounded-full text-lg font-semibold hover:from-purple-700 hover:to-pink-700 transition-all transform hover:shadow-lg hover:shadow-purple-500/25 cursor-pointer'
+          whileHover={{ scale: 1.05 }}
+          whileTap={{ scale: 0.95 }}
+          onClick={openConnectModal}>
+          Connect Wallet
+        </motion.button>
         )}
         <motion.button
           className='px-8 py-4 bg-transparent border-2 border-purple-500 rounded-full text-lg font-semibold hover:bg-purple-500/10 transition-all cursor-pointer'

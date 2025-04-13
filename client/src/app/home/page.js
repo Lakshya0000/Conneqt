@@ -11,7 +11,6 @@ import {
   ChevronDown,
 } from 'lucide-react'
 import { DNAAnimation, HeroSection } from '../components'
-import { ConnectButton } from '@rainbow-me/rainbowkit'
 import { useAccount } from 'wagmi'
 import { useEffect, useState } from 'react'
 import { OnBoarding } from '../components/OnBoarding'
@@ -22,6 +21,7 @@ import { WavyBackground } from '@/components/ui/wavy-background'
 import Carousel from '@/components/ui/carousel'
 import { AnimatedTestimonials } from '@/components/ui/animated-testimonials'
 import { Vortex } from '@/components/ui/vortex'
+import WalletProvider from '@/components/wallet'
 
 export default function Home() {
   const router = useRouter()
@@ -110,7 +110,7 @@ export default function Home() {
                 </div>
               </Link>
             </motion.div>
-            <div className='hidden md:flex space-x-8'>
+            <div className='md:flex space-x-8'>
               <Link href='#how-it-works'>
                 <span className='hover:text-purple-400 transition-colors'>
                   How It Works
@@ -127,7 +127,7 @@ export default function Home() {
                 </span>
               </Link>
               <div>
-                <ConnectButton />
+                <WalletProvider />
               </div>
             </div>
           </div>
