@@ -25,7 +25,7 @@ import { Vortex } from '@/components/ui/vortex'
 
 export default function Home() {
   const router = useRouter()
-  const [submitted, setSubmitted] = useState(true)
+  const [submitted, setSubmitted] = useState(false)
   const { isConnected } = useAccount()
   const slideData = [
     {
@@ -135,12 +135,12 @@ export default function Home() {
       </motion.nav>
 
       {/* Content wrapper with higher z-index */}
-      {!setSubmitted && (
+      {!submitted && (
         <div className=' flex flex-col w-full h-screen items-center justify-center'>
           <OnBoarding />
         </div>
       )}
-      {setSubmitted && (
+      {submitted && (
         <div className='relative z-10'>
           <WavyBackground
             waveWidth={70}

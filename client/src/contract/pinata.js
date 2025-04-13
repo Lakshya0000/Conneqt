@@ -1,4 +1,5 @@
- export const uploadToIpfs = async (file) => {
+import axios from "axios";
+export const uploadToIpfs = async (file) => {
     if (file) {
       try {
         const fileData = new FormData();

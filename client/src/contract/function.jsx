@@ -1,4 +1,4 @@
-import { useReadContract,useWriteContract, useReadContracts } from 'wagmi'
+import { useReadContract,useWriteContract, useReadContracts, } from 'wagmi'
 import { collabAddress } from '@/contract/contract'
 import { collabABI } from '@/contract/contract'
 import { desciAddress } from '@/contract/contract'
@@ -18,10 +18,13 @@ export const createProfile = async(profileURI)=>{
             functionName:'createProfile',
             args: [profileURI]
         })
+        await tx.wait()
         console.log("Transaction Successful")
+        return true;
         
     } catch (error) {
         console.log(error)
+        return false;
         
     }
 }
