@@ -158,12 +158,11 @@ export default function Home() {
             <h1 className='text-center text-5xl text-white'>Cards Part 1</h1>
             <AnimatedTestimonials testimonials={testimonials} />
           </div>
-          {/* Card Part 3
           <div className='min-h-screen flex flex-col items-center gap-y-4 justify-center'>
             <h1 className='text-center text-5xl text-white'>Cards Part 1</h1>
             <AnimatedTestimonials testimonials={testimonials}/>
-          </div> */}
-          {/* <section
+          </div>
+          <section
             id='projects'
             className='py-20 px-6 '>
             <div className='container mx-auto'>
@@ -241,7 +240,7 @@ export default function Home() {
                 ))}
               </motion.div>
             </div>
-          </section> */}
+          </section>
           <div className='w-full rounded-md  h-screen overflow-hidden'>
             <Vortex
               backgroundColor='black'

@@ -1,3 +1,5 @@
+"use client"
+
 import React from 'react'
 import {
   Wallet,
@@ -5,11 +7,11 @@ import {
   WalletDropdown,
   WalletDropdownDisconnect,
 } from '@coinbase/onchainkit/wallet'
-import { Avatar, Name, Address, Identity } from '@coinbase/onchainkit/identity'
+import { Avatar, Name, Address, Identity, EthBalance } from '@coinbase/onchainkit/identity'
 const WalletProvider = () => {
   return (
-    <Wallet>
-      <ConnectWallet>
+    <Wallet className='bg-blue-400'>
+      <ConnectWallet className='bg-blue-400'>
         <Avatar />
         <Name />
       </ConnectWallet>
