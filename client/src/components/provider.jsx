@@ -6,8 +6,8 @@ export function Provider({ children }) {
         appearance: {
           name: 'OnchainKit Playground',
           logo: 'https://onchainkit.xyz/favicon/48x48.png?v4-19-24',
-          mode: 'auto',
-          theme: 'cyberpunk',
+          mode: 'dark',
+          theme: 'default',
         },
         wallet: {
           display: 'modal',

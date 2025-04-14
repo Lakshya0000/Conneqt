@@ -1,6 +1,7 @@
 import { motion } from 'framer-motion'
 import { ChevronDown } from 'lucide-react'
 import { fadeInUp, staggerChildren } from './'
+import WalletProvider from '@/components/wallet'
 
 export default function HeroSection({ isLanding }) {
   return(<section className='min-h-screen flex items-center justify-center relative px-6'>
@@ -36,13 +37,13 @@ export default function HeroSection({ isLanding }) {
         className='flex flex-col md:flex-row gap-4 justify-center'
         variants={fadeInUp}>
         {isLanding && (
-          <motion.button
-          className='px-8 py-4 bg-gradient-to-r from-purple-600 to-pink-600 rounded-full text-lg font-semibold hover:from-purple-700 hover:to-pink-700 transition-all transform hover:shadow-lg hover:shadow-purple-500/25 cursor-pointer'
-          whileHover={{ scale: 1.05 }}
-          whileTap={{ scale: 0.95 }}
-          onClick={openConnectModal}>
-          Connect Wallet
-        </motion.button>
+          // <motion.button
+          // className='px-8 py-4 bg-gradient-to-r from-purple-600 to-pink-600 rounded-full text-lg font-semibold hover:from-purple-700 hover:to-pink-700 transition-all transform hover:shadow-lg hover:shadow-purple-500/25 cursor-pointer'
+          // whileHover={{ scale: 1.05 }}
+          // whileTap={{ scale: 0.95 }}
+          // >
+         <WalletProvider />
+        // </motion.button>
         )}
         <motion.button
           className='px-8 py-4 bg-transparent border-2 border-purple-500 rounded-full text-lg font-semibold hover:bg-purple-500/10 transition-all cursor-pointer'
