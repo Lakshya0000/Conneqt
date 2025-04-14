@@ -11,7 +11,7 @@ import {
   ChevronDown,
 } from 'lucide-react'
 import { DNAAnimation, HeroSection } from '../components'
-import { useAccount } from 'wagmi'
+import { useAccount, useReadContract } from 'wagmi'
 import { useEffect, useState } from 'react'
 import { OnBoarding } from '../components/OnBoarding'
 import { staggerChildren, fadeInUp } from '../components'
@@ -23,11 +23,19 @@ import { AnimatedTestimonials } from '@/components/ui/animated-testimonials'
 import { Vortex } from '@/components/ui/vortex'
 import WalletProvider from '@/components/wallet'
 import Navbar from '../components/Navbar'
+import { getProfileConfig } from '@/contract/function'
 
 export default function Home() {
   const router = useRouter()
   const [submitted, setSubmitted] = useState(false)
   const { isConnected } = useAccount()
+  const {address} = useAccount();
+  const {data: profileData, isLoading: isProfileLoading}=useReadContract({...getProfileConfig, args:[address]});
+  useEffect(() => {
+    if(profileData&&!isProfileLoading){
+      setSubmitted(true);
+    }
+  },[profileData, isProfileLoading])
   const slideData = [
     {
       title: 'Mystic Mountains',

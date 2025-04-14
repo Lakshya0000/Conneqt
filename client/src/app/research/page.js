@@ -1,14 +1,16 @@
 "use client"
 
 import { useState } from "react";
-import { Calendar, Clock, Coins, FileText } from 'lucide-react'; // Add icons
+import { Calendar, Clock, Coins, FileText } from 'lucide-react';
 import Navbar from "../components/Navbar";
 import { useWriteContract } from "wagmi";
-import { createResearchConfig } from "@/contract/function";
+import { createResearchConfig, startResearchCrowdfundingConfig } from "@/contract/function";
+import { parseEther } from "viem"; // Add this import
+import { toast } from "sonner";
 
 const Page = () => {
     const [showModal, setShowModal] = useState(false);
-    const {writeContractAsync}=useWriteContract();
+    const { writeContractAsync } = useWriteContract();
     const [researchData, setResearchData] = useState([
         {
             title: 'AI for Healthcare',
@@ -40,19 +42,47 @@ const Page = () => {
         setNewResearch({ ...newResearch, [name]: value });
     };
 
-    const handleCreateResearch = () => {
-        if (
-            newResearch.title &&
-            newResearch.description &&
-            newResearch.amount &&
-            newResearch.duration &&
-            newResearch.deadline
-        ) {
-            let realAmount= 
-            writeContractAsync({...createResearchConfig, args:[newResearch.title, newResearch.amount]})
-        } else {
-            alert('Please fill in all fields.');
-        }
+    const handleCreateResearch = async () => {
+        
+            try {
+                // Convert ETH amount to Wei
+                const amountInWei = parseEther(newResearch.amount.replace(' ETH', ''));
+
+                // Calculate duration in seconds
+                const deadlineDate = new Date(newResearch.deadline);
+                const currentDate = new Date();
+                const durationInSeconds = Math.floor((deadlineDate - currentDate) / 1000);
+
+                // Ensure deadline is in the future
+                if (durationInSeconds <= 0) {
+                    alert('Deadline must be in the future');
+                    return;
+                }
+
+                await writeContractAsync({
+                    ...startResearchCrowdfundingConfig,
+                    args: [
+                        newResearch.title,
+                        amountInWei,
+                        durationInSeconds
+                    ]
+                });
+                toast.success('Research created successfully!')
+                // Reset form and close modal on success
+                setNewResearch({
+                    title: '',
+                    description: '',
+                    amount: '',
+                    deadline: ''
+                });
+                setShowModal(false);
+            } catch (error) {
+                console.error('Error creating research:', error);
+                alert('Error creating research. Please try again.');
+            }
+        // } else {
+        //     alert('Please fill in all fields.');
+        // }
     };
 
     return (

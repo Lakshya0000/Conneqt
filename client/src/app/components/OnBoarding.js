@@ -42,7 +42,9 @@ export function OnBoarding() {
   useEffect(() => {
     if (profileData && !isProfileLoading) {
       toast.info('You already have a profile! Redirecting to dashboard...')
+
     }
+    console.log('Profile data:', profileData);
   }, [profileData, isProfileLoading])
 
   // Initial message
