@@ -11,6 +11,7 @@ import Image from 'next/image'
 import { useAccount, useWriteContract, useReadContract } from 'wagmi'
 import { createProfileConfig, getProfileConfig } from '@/contract/function'
 import { toast } from 'sonner'
+import { uploadToIpfs, uploadToIpfsJson } from '@/contract'
 
 export function OnBoarding() {
   // State management
@@ -127,27 +128,8 @@ export function OnBoarding() {
 
     try {
       setLoading(true)
-
-      // Create FormData for Pinata
-      const formData = new FormData()
-      formData.append('file', file)
-      formData.append('pinataMetadata', JSON.stringify({ name: file.name }))
-
-      // Upload to Pinata
-      const res = await axios({
-        method: 'post',
-        url: 'https://api.pinata.cloud/pinning/pinFileToIPFS',
-        data: formData,
-        headers: {
-          pinata_api_key: '35cb1bf7be19d2a8fa0d',
-          pinata_secret_api_key:
-            '2c2e9e43bca7a619154cb48e8b060c5643ea6220d0b7c9deb565fa491b3b3a50',
-          'Content-Type': 'multipart/form-data',
-        },
-      })
-
       // Set image URL
-      const imageUrl = `https://ipfs.io/ipfs/${res.data.IpfsHash}`
+      const imageUrl = uploadToIpfs(file)
       setUserData((prev) => ({ ...prev, imageUrl }))
 
       // Add success message
@@ -185,29 +167,14 @@ export function OnBoarding() {
       setLoading(true)
 
       // Prepare metadata
-      const metadata = JSON.stringify({
+      const metadata = {
         name: userData.name,
-        imageUrl: userData.imageUrl,
+        image: userData.imageUrl,
         role: userData.role,
-      })
+      }
 
-      // Upload metadata to IPFS
-      const res = await axios({
-        method: 'post',
-        url: 'https://api.pinata.cloud/pinning/pinJSONToIPFS',
-        data: metadata,
-        headers: {
-          pinata_api_key: '35cb1bf7be19d2a8fa0d',
-          pinata_secret_api_key:
-            '2c2e9e43bca7a619154cb48e8b060c5643ea6220d0b7c9deb565fa491b3b3a50',
-          'Content-Type': 'application/json',
-        },
-      })
+      const profileURI = uploadToIpfsJson(metadata);
 
-      // Get IPFS URI for metadata
-      const profileURI = `https://ipfs.io/ipfs/${res.data.IpfsHash}`
-
-      // Mint profile on blockchain
       await writeContractAsync({
         ...createProfileConfig,
         args: [profileURI],

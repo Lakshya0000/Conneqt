@@ -20,6 +20,28 @@ export const uploadToIpfs = async (file) => {
         return tokenURI;
       } catch (error) {
         console.error("Error uploading file:", error);
+        throw new Error("Error uploading file to IPFS");
       }
     }
   };
+
+  export const uploadToIpfsJson = async (jsonData) => {
+    if(jsonData){
+      try{
+        const res = await axios.post('https://api.pinata.cloud/pinning/pinJSONToIPFS',jsonData,{
+          headers:{
+            pinata_api_key : '35cb1bf7be19d2a8fa0d',
+            pinata_secret_api_key : '2c2e9e43bca7a619154cb48e8b060c5643ea6220d0b7c9deb565fa491b3b3a50',
+            'Content-Type': 'application/json',
+          }
+        })
+        const tokenURI = `https://ipfs.io/ipfs/${res.data.IpfsHash}`;
+        console.log(tokenURI)
+        return tokenURI;
+      }
+      catch(e){
+        console.log("Error uploading JSON:", e)
+        throw new Error("Error uploading JSON to IPFS")
+      }
+    }
+  }
