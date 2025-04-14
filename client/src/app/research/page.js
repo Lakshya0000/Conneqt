@@ -1,40 +1,24 @@
 "use client"
 
-import { useState } from "react";
-import { Calendar, Clock, Coins, FileText } from 'lucide-react';
+import { useEffect, useState } from "react";
+import { Calendar, Coins, FileText } from 'lucide-react';
 import Navbar from "../components/Navbar";
-import { useWriteContract } from "wagmi";
-import { createResearchConfig, startResearchCrowdfundingConfig } from "@/contract/function";
-import { parseEther } from "viem"; // Add this import
+import { useReadContract, useWriteContract } from "wagmi";
+import { startResearchCrowdfundingConfig } from "@/contract/function";
+import { parseEther } from "viem";
 import { toast } from "sonner";
+import { escrowABI, escrowAddress } from "@/contract/contract";
 
 const Page = () => {
     const [showModal, setShowModal] = useState(false);
     const { writeContractAsync } = useWriteContract();
-    const [researchData, setResearchData] = useState([
-        {
-            title: 'AI for Healthcare',
-            description: 'Research on using AI to improve healthcare systems.',
-            amount: '10 ETH',
-        },
-        {
-            title: 'Renewable Energy',
-            description: 'Exploring new technologies for renewable energy.',
-            amount: '15 ETH',
-        },
-        {
-            title: 'Space Exploration',
-            description: 'Developing cost-effective solutions for space travel.',
-            amount: '20 ETH',
-        },
-    ]);
+    const [researchData, setResearchData] = useState([]);
 
     const [newResearch, setNewResearch] = useState({
         title: '',
         description: '',
         amount: '',
-        duration: '',
-        deadline: '' // Add deadline field
+        deadline: ''
     });
 
     const handleInputChange = (e) => {
@@ -42,47 +26,76 @@ const Page = () => {
         setNewResearch({ ...newResearch, [name]: value });
     };
 
-    const handleCreateResearch = async () => {
-        
-            try {
-                // Convert ETH amount to Wei
-                const amountInWei = parseEther(newResearch.amount.replace(' ETH', ''));
+    // Fetch total number of research projects
+    const { data: totalProjects,isLoading: totalLoading } = useReadContract({
+        abi: escrowABI,
+        address: escrowAddress,
+        functionName: "nextProjectId",
+    });
 
-                // Calculate duration in seconds
-                const deadlineDate = new Date(newResearch.deadline);
-                const currentDate = new Date();
-                const durationInSeconds = Math.floor((deadlineDate - currentDate) / 1000);
-
-                // Ensure deadline is in the future
-                if (durationInSeconds <= 0) {
-                    alert('Deadline must be in the future');
-                    return;
+    // Fetch research project details
+    useEffect(() => {
+        console.log('Total Projects:', totalProjects);  
+        const fetchResearchProjects = async () => {
+            if (totalProjects) {
+                const projects = [];
+                for (let i = 0; i < totalProjects; i++) {
+                    const project = await useReadContract({
+                        abi: escrowABI,
+                        address: escrowAddress,
+                        functionName: "getResearchProject",
+                        args: [i],
+                    });
+                    console.log('Project:', project);
+                    projects.push({
+                        title: project.title,
+                        description: project.description,
+                        amount: `${parseFloat(project.amount) / 1e18} ETH`,
+                        deadline: new Date(project.deadline * 1000).toLocaleDateString(),
+                    });
                 }
 
-                await writeContractAsync({
-                    ...startResearchCrowdfundingConfig,
-                    args: [
-                        newResearch.title,
-                        amountInWei,
-                        durationInSeconds
-                    ]
-                });
-                toast.success('Research created successfully!')
-                // Reset form and close modal on success
-                setNewResearch({
-                    title: '',
-                    description: '',
-                    amount: '',
-                    deadline: ''
-                });
-                setShowModal(false);
-            } catch (error) {
-                console.error('Error creating research:', error);
-                alert('Error creating research. Please try again.');
+                console.log('Fetched research projects:', projects);
+                setResearchData(projects);
             }
-        // } else {
-        //     alert('Please fill in all fields.');
-        // }
+        };
+
+        fetchResearchProjects();
+    }, [totalProjects,totalLoading]);
+
+    const handleCreateResearch = async () => {
+        try {
+            const amountInWei = parseEther(newResearch.amount.replace(' ETH', ''));
+            const deadlineDate = new Date(newResearch.deadline);
+            const currentDate = new Date();
+            const durationInSeconds = Math.floor((deadlineDate - currentDate) / 1000);
+
+            if (durationInSeconds <= 0) {
+                alert('Deadline must be in the future');
+                return;
+            }
+
+            await writeContractAsync({
+                ...startResearchCrowdfundingConfig,
+                args: [
+                    newResearch.title,
+                    amountInWei,
+                    durationInSeconds
+                ]
+            });
+
+            toast.success('Research created successfully!');
+            setNewResearch({
+                title: '',
+                description: '',
+                amount: '',
+                deadline: ''
+            });
+            setShowModal(false);
+        } catch (error) {
+            console.error('Error creating research:', error);
+            alert('Error creating research. Please try again.');
+        }
     };
 
     return (
@@ -116,11 +129,13 @@ const Page = () => {
                             <Coins className="w-5 h-5" />
                             <span>Funding Required: {research.amount}</span>
                         </div>
+                        <div className="text-gray-400 text-sm mt-2">
+                            Deadline: {research.deadline}
+                        </div>
                     </div>
                 ))}
             </div>
 
-            {/* Improved Modal */}
             {showModal && (
                 <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50">
                     <div className="bg-gray-900 p-8 rounded-xl shadow-2xl w-full max-w-md border border-purple-400/30">
