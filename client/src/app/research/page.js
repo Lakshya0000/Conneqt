@@ -1,11 +1,10 @@
-"use client"
-
+"use client";
 import { useEffect, useState } from "react";
 import { Calendar, Coins, FileText } from 'lucide-react';
 import Navbar from "../components/Navbar";
-import { useReadContract, useWriteContract } from "wagmi";
+import { useReadContract, useReadContracts, useWriteContract } from "wagmi";
 import { startResearchCrowdfundingConfig } from "@/contract/function";
-import { parseEther } from "viem";
+import { formatEther, parseEther } from "viem";
 import { toast } from "sonner";
 import { escrowABI, escrowAddress } from "@/contract/contract";
 
@@ -20,49 +19,75 @@ const Page = () => {
         amount: '',
         deadline: ''
     });
-
     const handleInputChange = (e) => {
         const { name, value } = e.target;
         setNewResearch({ ...newResearch, [name]: value });
     };
-
     // Fetch total number of research projects
-    const { data: totalProjects,isLoading: totalLoading } = useReadContract({
+    const { data: totalProjects } = useReadContract({
         abi: escrowABI,
         address: escrowAddress,
         functionName: "nextProjectId",
     });
 
-    // Fetch research project details
+    // Create an array of contract reading configurations
+    const getContractConfigs = () => {
+        if (!totalProjects) return [];
+
+        const configs = [];
+        for (let i = 1; i <= Number(totalProjects); i++) {
+            configs.push({
+                abi: escrowABI,
+                address: escrowAddress,
+                functionName: "getResearchProject",
+                args: [i],
+            });
+        }
+        return configs;
+    };
+
+    // Use `useReadContracts` to batch fetch all research projects
+    const { data: projectsData } = useReadContracts({
+        contracts: getContractConfigs(),
+    });
+
+    // Process fetched data and update state
     useEffect(() => {
-        console.log('Total Projects:', totalProjects);  
-        const fetchResearchProjects = async () => {
-            if (totalProjects) {
-                const projects = [];
-                for (let i = 0; i < totalProjects; i++) {
-                    const project = await useReadContract({
-                        abi: escrowABI,
-                        address: escrowAddress,
-                        functionName: "getResearchProject",
-                        args: [i],
-                    });
-                    console.log('Project:', project);
-                    projects.push({
-                        title: project.title,
-                        description: project.description,
-                        amount: `${parseFloat(project.amount) / 1e18} ETH`,
-                        deadline: new Date(project.deadline * 1000).toLocaleDateString(),
-                    });
-                }
+        if (!projectsData) return;
+        console.log("Fetched Projects Data:", projectsData);
+        const processedProjects = projectsData.map((project, index) => {
+            if (!project?.result) return null;
 
-                console.log('Fetched research projects:', projects);
-                setResearchData(projects);
+            const title = project.result[0];
+            const description = "This is Description";
+            const amount = Number(formatEther(project.result[2]));
+            console.log("Amount:", amount);
+            const currentFunding = formatEther(project.result[3]);
+            const deadlineInSeconds = Number(project.result[4]); // Deadline in seconds
+
+            // Calculate remaining time
+            const currentTimeInSeconds = Math.floor(Date.now() / 1000); // Current time in seconds
+            const remainingTimeInSeconds = deadlineInSeconds - currentTimeInSeconds;
+
+            let deadline;
+            if (remainingTimeInSeconds > 0) {
+                const days = Math.floor(remainingTimeInSeconds / (24 * 60 * 60));
+                const hours = Math.floor((remainingTimeInSeconds % (24 * 60 * 60)) / (60 * 60));
+                deadline = `${days} days, ${hours} hours remaining`;
+            } else {
+                deadline = "Expired";
             }
-        };
 
-        fetchResearchProjects();
-    }, [totalProjects,totalLoading]);
+            return {
+                id: index + 1,
+                title,
+                amount: `${amount} ETH`,
+                deadline,
+            };
+        });
 
+        setResearchData(processedProjects.filter((project) => project !== null));
+    }, [projectsData]);
     const handleCreateResearch = async () => {
         try {
             const amountInWei = parseEther(newResearch.amount.replace(' ETH', ''));
@@ -95,6 +120,38 @@ const Page = () => {
         } catch (error) {
             console.error('Error creating research:', error);
             alert('Error creating research. Please try again.');
+        }
+    };
+    const handleContribute = async (projectId) => {
+        try {
+            if (!contributionAmount) {
+                alert("Please enter contribution amount");
+                return;
+            }
+            const amountInWei = parseEther(contributionAmount);
+
+            await contributeAsync({
+                ...contributeToResearchConfig,
+                args: [projectId],
+                value: amountInWei,
+            });
+
+           alert("Contribution successful!");
+            setContributionAmount("");
+
+            // Refetch the data
+            const { data } = await useReadContracts({
+                contracts: getContractConfigs(),
+            });
+            if (data) {
+                const processed = data.map((project, index) => {
+                    // ... your existing processing logic
+                });
+                setResearchData(processed.filter((project) => project !== null));
+            }
+        } catch (error) {
+            console.error("Error contributing:", error);
+           alert("Failed to contribute. Please try again.");
         }
     };
 
