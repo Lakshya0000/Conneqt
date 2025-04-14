@@ -28,44 +28,45 @@ export function OnBoarding() {
   const [imgLoader, setImgLoader] = useState(false)
   const messagesEndRef = useRef(null)
   const fileInputRef = useRef(null)
-  const { writeContract,isPending,data } = useWriteContract()
-  const {isLoading,isSuccess} = useWaitForTransactionReceipt({data});
-  const uploadImageIPFS=async (event)=>{
-    event.preventDefault();
-    console.log("File input changed", event);
-    const file =event.target.files[0];
-    if(!file){
-      console.log("Enter file");return;
+  const { writeContract, isPending, data } = useWriteContract()
+  const { isLoading, isSuccess } = useWaitForTransactionReceipt({ data })
+  const uploadImageIPFS = async (event) => {
+    event.preventDefault()
+    console.log('File input changed', event)
+    const file = event.target.files[0]
+    if (!file) {
+      console.log('Enter file')
+      return
     }
 
-    const formData=new FormData()
-    formData.append('file', file);
-    const metaData=JSON.stringify({
-      name:file.name
+    const formData = new FormData()
+    formData.append('file', file)
+    const metaData = JSON.stringify({
+      name: file.name,
     })
-    formData.append("pinataMetadata",metaData);
-    try{
-      setImgLoader(true);
+    formData.append('pinataMetadata', metaData)
+    try {
+      setImgLoader(true)
       const res = await axios({
-        method: "post",
-        url: "https://api.pinata.cloud/pinning/pinFileToIPFS",
+        method: 'post',
+        url: 'https://api.pinata.cloud/pinning/pinFileToIPFS',
         data: formData,
         headers: {
           pinata_api_key: `35cb1bf7be19d2a8fa0d`,
           pinata_secret_api_key: `2c2e9e43bca7a619154cb48e8b060c5643ea6220d0b7c9deb565fa491b3b3a50`,
-          "Content-Type": "multipart/form-data",
+          'Content-Type': 'multipart/form-data',
         },
-      });
+      })
 
-      const resData=res.data;
+      const resData = res.data
       setUserData((prev) => ({
         ...prev,
         imageUrl: `https://ipfs.io/ipfs/${resData.IpfsHash}`,
-      }));
-      setImgLoader(false);
-    }catch(error){
-      setImgLoader(false);
-      window.alert("ipfs image upload error : ", error);
+      }))
+      setImgLoader(false)
+    } catch (error) {
+      setImgLoader(false)
+      window.alert('ipfs image upload error : ', error)
     }
   }
 
@@ -111,23 +112,26 @@ export function OnBoarding() {
       )
     }
   }
-  useEffect(()=>{
-    console.log("hash",data);
-  },[data])
   useEffect(() => {
-    if(isSuccess){
-      console.log("Profile minted successfully");
+    console.log('hash', data)
+  }, [data])
+  useEffect(() => {
+    if (isSuccess) {
+      console.log('Profile minted successfully')
     }
-  },[isSuccess])
-  
+  }, [isSuccess])
+
   useEffect(() => {
-    if(messages?.length === 0){setTimeout(() => {
-      addMessage(
-        "Hi there! I'm your onboarding assistant. What's your name?",
-        'ai'
-      )
-    }, 500)}
-  }, [])
+    if (messages.length === 0) {
+      setTimeout(() => {
+        addMessage(
+          "Hi there! I'm your onboarding assistant. What's your name?",
+          'ai'
+        )
+      }, 500)
+    }
+  }, []) // Ensure this runs only once by using an empty dependency array
+
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
   }, [messages])
@@ -181,8 +185,8 @@ export function OnBoarding() {
       setTimeout(() => {
         addMessage(
           'Nice to meet you, ' +
-            nameValue +
-            '! Could you please upload a profile picture?',
+          nameValue +
+          '! Could you please upload a profile picture?',
           'ai',
           1000
         )
@@ -239,69 +243,64 @@ export function OnBoarding() {
   }
 
   return (
-    <Card className='flex flex-col h-[800px] shadow-xl rounded-xl overflow-hidden border border-purple-400/30 bg-gray-900 w-[1200px]'>
+    <Card className='flex flex-col mt-20 h-[700px] shadow-xl rounded-xl overflow-hidden border border-purple-400/30 bg-gray-900 w-[1200px] '>
       <div className='bg-gray-800 p-4 text-purple-400 flex items-center gap-2 border-b border-purple-400/20'>
         <MessageCircle className='h-5 w-5' />
         <h2 className='font-semibold'>Onboarding Assistant</h2>
       </div>
 
-      <div className='flex-1 overflow-y-auto p-4 bg-gray-900'>
-        <div className='space-y-4'>
-          {messages.map((message) => (
-            <div
-              key={message.id}
-              className={`flex ${
-                message.sender === 'ai' ? 'justify-start' : 'justify-end'
+      <div className='flex-1 overflow-y-auto p-6 bg-gray-900 space-y-4'>
+        {messages.map((message) => (
+          <div
+            key={message.id}
+            className={`flex ${message.sender === 'ai' ? 'justify-start' : 'justify-end'
               }`}>
-              <div
-                className={`flex items-start gap-2 max-w-[80%] ${
-                  message.sender === 'ai' ? 'flex-row' : 'flex-row-reverse'
+            <div
+              className={`flex items-start gap-3 max-w-[80%] ${message.sender === 'ai' ? 'flex-row' : 'flex-row-reverse'
                 }`}>
-                <div className='flex-shrink-0 mt-1'>
-                  {message.sender === 'ai' ? (
-                    <div className='bg-purple-500 text-white w-8 h-8 rounded-full flex items-center justify-center'>
-                      <MessageCircle className='h-4 w-4' />
-                    </div>
-                  ) : (
-                    <Avatar className='w-8 h-8 bg-slate-300'>
-                      <User className='h-4 w-4' />
-                    </Avatar>
-                  )}
-                </div>
-                <div
-                  className={`rounded-lg p-3 ${
-                    message.sender === 'ai'
-                      ? 'bg-gray-800 text-gray-100'
-                      : 'bg-purple-600 text-white'
+              <div className='flex-shrink-0 mt-1'>
+                {message.sender === 'ai' ? (
+                  <div className='bg-purple-500 text-white w-8 h-8 rounded-full flex items-center justify-center'>
+                    <MessageCircle className='h-4 w-4' />
+                  </div>
+                ) : (
+                  <Avatar className='w-8 h-8 bg-slate-300'>
+                    <User className='h-4 w-4' />
+                  </Avatar>
+                )}
+              </div>
+              <div
+                className={`rounded-lg p-4 ${message.sender === 'ai'
+                    ? 'bg-gray-800 text-gray-100'
+                    : 'bg-purple-600 text-white'
                   }`}>
-                  {message.isTyping ? (
-                    <div className='flex space-x-1 items-center h-6'>
-                      <div
-                        className='w-2 h-2 rounded-full bg-purple-400 animate-bounce'
-                        style={{ animationDelay: '0ms' }}></div>
-                      <div
-                        className='w-2 h-2 rounded-full bg-purple-400 animate-bounce'
-                        style={{ animationDelay: '150ms' }}></div>
-                      <div
-                        className='w-2 h-2 rounded-full bg-purple-400 animate-bounce'
-                        style={{ animationDelay: '300ms' }}></div>
-                    </div>
-                  ) : (
-                    <p>{message.text}</p>
-                  )}
-                </div>
+                {message.isTyping ? (
+                  <div className='flex space-x-1 items-center h-6'>
+                    <div
+                      className='w-2 h-2 rounded-full bg-purple-400 animate-bounce'
+                      style={{ animationDelay: '0ms' }}></div>
+                    <div
+                      className='w-2 h-2 rounded-full bg-purple-400 animate-bounce'
+                      style={{ animationDelay: '150ms' }}></div>
+                    <div
+                      className='w-2 h-2 rounded-full bg-purple-400 animate-bounce'
+                      style={{ animationDelay: '300ms' }}></div>
+                  </div>
+                ) : (
+                  <p>{message.text}</p>
+                )}
               </div>
             </div>
-          ))}
-          <div ref={messagesEndRef} />
-        </div>
+          </div>
+        ))}
+        <div ref={messagesEndRef} />
       </div>
 
-      <div className='p-4 border-t border-purple-400/20 bg-gray-800'>
+      <div className='p-6 border-t border-purple-400/20 bg-gray-800'>
         {currentStep === 'name' && (
           <form
             onSubmit={handleSubmit}
-            className='flex gap-2'>
+            className='flex gap-3'>
             <Input
               value={input}
               onChange={(e) => setInput(e.target.value)}
@@ -318,8 +317,7 @@ export function OnBoarding() {
         )}
 
         {currentStep === 'image' && (
-          <div className='flex flex-col gap-3'>
-            {/* Hidden input */}
+          <div className='flex flex-col gap-4'>
             <input
               type='file'
               ref={fileInputRef}
@@ -327,8 +325,6 @@ export function OnBoarding() {
               accept='image/*'
               className='hidden'
             />
-
-            {/* Simple direct upload button */}
             <div className='flex items-center justify-center gap-4'>
               {userData.imageUrl && (
                 <div className='relative w-16 h-16 rounded-full overflow-hidden border-2 border-purple-400'>
@@ -340,14 +336,12 @@ export function OnBoarding() {
                   />
                 </div>
               )}
-
               <Button
                 onClick={triggerFileInput}
                 className='flex items-center gap-2 bg-purple-600 hover:bg-purple-700'>
                 <Upload className='h-4 w-4' />
                 {userData.imageUrl ? 'Change Image' : 'Upload Profile Picture'}
               </Button>
-
               {userData.imageUrl && (
                 <Button
                   className='bg-purple-600 hover:bg-purple-700'
@@ -360,7 +354,7 @@ export function OnBoarding() {
         )}
 
         {currentStep === 'role' && (
-          <div className='grid grid-cols-3 gap-3'>
+          <div className='grid grid-cols-3 gap-4'>
             <Button
               onClick={() => handleRoleSelect('doctor')}
               variant='outline'
@@ -368,7 +362,6 @@ export function OnBoarding() {
               <UserRound className='h-8 w-8 text-purple-400' />
               <span>Doctor</span>
             </Button>
-
             <Button
               onClick={() => handleRoleSelect('client')}
               variant='outline'
@@ -376,7 +369,6 @@ export function OnBoarding() {
               <UserRound className='h-8 w-8 text-purple-400' />
               <span>Client</span>
             </Button>
-
             <Button
               onClick={() => handleRoleSelect('researcher')}
               variant='outline'
