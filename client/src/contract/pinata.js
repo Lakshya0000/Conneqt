@@ -45,3 +45,18 @@ export const uploadToIpfs = async (file) => {
       }
     }
   }
+
+  export const getJsonFromIpfs = async (ipfsHash) => {
+    if(ipfsHash){
+      try{
+        const res = await axios.get(ipfsHash);
+        const jsonData = res.data;
+        console.log(jsonData)
+        return jsonData;
+      }
+      catch(e){
+        console.log("Error fetching JSON:", e)
+        throw new Error("Error fetching JSON from IPFS")
+      }
+    }
+  }

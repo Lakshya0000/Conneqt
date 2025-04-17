@@ -29,9 +29,9 @@ const Navbar = () => {
                           </Link>
                         </motion.div>
                         <div className='md:flex space-x-8 items-center'>
-                          <Link href='#how-it-works'>
+                          <Link href={"/channels"}>
                             <span className='hover:text-purple-400 transition-colors'>
-                              How It Works
+                              Channels
                             </span>
                           </Link>
                           <Link href='#projects'>

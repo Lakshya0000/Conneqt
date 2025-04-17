@@ -1,4 +1,4 @@
 
 
 
-export {uploadToIpfs, uploadToIpfsJson} from "./pinata"
+export {uploadToIpfs, uploadToIpfsJson,getJsonFromIpfs} from "./pinata"

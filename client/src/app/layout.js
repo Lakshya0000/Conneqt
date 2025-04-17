@@ -5,8 +5,11 @@ import { WagmiProvider, createConfig, http } from 'wagmi'
 import { QueryClientProvider, QueryClient } from '@tanstack/react-query'
 import { mainnet, sepolia, baseSepolia, base } from 'wagmi/chains'
 import { Provider } from '@/components/provider'
-import '@coinbase/onchainkit/styles.css'; 
+import '@coinbase/onchainkit/styles.css'
 import Navbar from './components/Navbar'
+import { Toaster } from 'sonner'
+import CreateChannel from './components/CreateChannel'
+import { ChannelProvider } from '@/context/WalletContext'
 
 const geistSans = Geist({
   variable: '--font-geist-sans',
@@ -35,8 +38,18 @@ export default function RootLayout({ children }) {
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
         <WagmiProvider config={config}>
           <QueryClientProvider client={queryClient}>
-            <Navbar/>
-            <Provider>{children}</Provider>
+            <Provider>
+              <ChannelProvider>
+                <Navbar />
+                {children}
+                <CreateChannel />
+              <Toaster
+                richColors
+                position='top-center'
+                toastOptions={{ duration: 3000 }}
+              />
+              </ChannelProvider>
+            </Provider>
           </QueryClientProvider>
         </WagmiProvider>
       </body>

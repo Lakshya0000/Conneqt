@@ -152,3 +152,16 @@ export const isOwnerOrCollaboratorConfig = {
   functionName: "_isOwnerOrCollaborator"
 };
 
+export const totalCompaniesConfig = {
+  address: companyAddress,
+  abi: companyABI,
+  functionName: "nextCompanyId"
+}
+
+export const totalProposalsConfig = {
+  address: companyAddress,
+  abi: companyABI,
+  functionName: "nextProposalId"
+}
+
+

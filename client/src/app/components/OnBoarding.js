@@ -131,7 +131,7 @@ export function OnBoarding() {
     try {
       setLoading(true)
       // Set image URL
-      const imageUrl = uploadToIpfs(file)
+      const imageUrl = await uploadToIpfs(file)
       setUserData((prev) => ({ ...prev, imageUrl }))
 
       // Add success message
@@ -175,7 +175,7 @@ export function OnBoarding() {
         role: userData.role,
       }
 
-      const profileURI = uploadToIpfsJson(metadata);
+      const profileURI = await uploadToIpfsJson(metadata);
 
       await writeContractAsync({
         ...createProfileConfig,
