@@ -3,7 +3,7 @@ import { useEffect, useState } from "react";
 import { Calendar, Coins, FileText } from 'lucide-react';
 import Navbar from "../components/Navbar";
 import { useReadContract, useReadContracts, useWriteContract } from "wagmi";
-import { startResearchCrowdfundingConfig } from "@/contract/function";
+import { startResearchCrowdfundingConfig, contributeToResearchConfig } from "@/contract/function";
 import { formatEther, parseEther } from "viem";
 import { toast } from "sonner";
 import { escrowABI, escrowAddress } from "@/contract/contract";
@@ -11,7 +11,9 @@ import { escrowABI, escrowAddress } from "@/contract/contract";
 const Page = () => {
     const [showModal, setShowModal] = useState(false);
     const { writeContractAsync } = useWriteContract();
+    const { writeContractAsync: contributeAsync } = useWriteContract(contributeToResearchConfig);
     const [researchData, setResearchData] = useState([]);
+    const [contributionAmounts, setContributionAmounts] = useState({});
 
     const [newResearch, setNewResearch] = useState({
         title: '',
@@ -83,6 +85,7 @@ const Page = () => {
                 title,
                 amount: `${amount} ETH`,
                 deadline,
+                currentFunding: `${currentFunding} ETH`,
             };
         });
 
@@ -124,34 +127,38 @@ const Page = () => {
     };
     const handleContribute = async (projectId) => {
         try {
-            if (!contributionAmount) {
-                alert("Please enter contribution amount");
+            const amount = contributionAmounts[projectId];
+            if (!amount) {
+                alert("Please enter a contribution amount");
                 return;
             }
-            const amountInWei = parseEther(contributionAmount);
+            const amountInWei = parseEther(amount);
 
             await contributeAsync({
                 ...contributeToResearchConfig,
-                args: [projectId],
-                value: amountInWei,
+                args: [projectId],value: amountInWei
             });
 
-           alert("Contribution successful!");
-            setContributionAmount("");
+            alert("Contribution successful!");
+            // Clear the specific input field
+            setContributionAmounts((prev) => ({
+                ...prev,
+                [projectId]: "",
+            }));
 
-            // Refetch the data
-            const { data } = await useReadContracts({
-                contracts: getContractConfigs(),
-            });
-            if (data) {
-                const processed = data.map((project, index) => {
-                    // ... your existing processing logic
-                });
-                setResearchData(processed.filter((project) => project !== null));
-            }
+            // Optionally, refetch data or update the UI dynamically
+            // const { data } = await useReadContracts({
+            //     contracts: getContractConfigs(),
+            // });
+            // if (data) {
+            //     const processed = data.map((project, index) => {
+            //         // ... your existing processing logic
+            //     });
+            //     setResearchData(processed.filter((project) => project !== null));
+            // }
         } catch (error) {
             console.error("Error contributing:", error);
-           alert("Failed to contribute. Please try again.");
+            alert("Failed to contribute. Please try again.");
         }
     };
 
@@ -186,8 +193,32 @@ const Page = () => {
                             <Coins className="w-5 h-5" />
                             <span>Funding Required: {research.amount}</span>
                         </div>
+                        <div className="flex items-center gap-2 text-purple-400 font-bold">
+                            <Coins className="w-5 h-5" />
+                            <span>Funding Recieved: {research.currentFunding}</span>
+                        </div>
                         <div className="text-gray-400 text-sm mt-2">
                             Deadline: {research.deadline}
+                        </div>
+                        <div className="mt-4">
+                            <input
+                                type="text"
+                                placeholder="Enter amount (ETH)"
+                                value={contributionAmounts[research.id] || ""}
+                                onChange={(e) =>
+                                    setContributionAmounts((prev) => ({
+                                        ...prev,
+                                        [research.id]: e.target.value,
+                                    }))
+                                }
+                                className="w-full p-2 bg-gray-700 border border-gray-600 rounded-lg text-white"
+                            />
+                            <button
+                                onClick={() => handleContribute(research.id)}
+                                className="mt-2 w-full px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-lg"
+                            >
+                                Fund
+                            </button>
                         </div>
                     </div>
                 ))}
