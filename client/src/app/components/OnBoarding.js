@@ -1,21 +1,49 @@
 'use client'
 
-import axios from 'axios'
 import { useState, useEffect, useRef } from 'react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Avatar } from '@/components/ui/avatar'
 import { Card } from '@/components/ui/card'
-import { MessageCircle, User, Upload, UserRound, Loader2 } from 'lucide-react'
+import {
+  MessageCircle,
+  User,
+  Upload,
+  UserRound,
+  Loader2,
+  Pencil,
+  Check,
+} from 'lucide-react'
 import Image from 'next/image'
-import { useAccount, useWriteContract, useReadContract } from 'wagmi'
-import { createProfileConfig, getProfileConfig } from '@/contract/function'
 import { toast } from 'sonner'
 import { uploadToIpfs, uploadToIpfsJson } from '@/contract'
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from '@/components/ui/dialog'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
+import { waitForTransactionReceipt, writeContract } from 'wagmi/actions'
+import { createProfileConfig } from '@/contract/function'
+import { useConfig } from 'wagmi'
 
-export function OnBoarding() {
-  // State management
-  const [messages, setMessages] = useState([])
+export function OnBoarding({ onComplete }) {
+  // State management with unique initial message ID
+  const [messages, setMessages] = useState([
+    {
+      id: `ai-initial-${Date.now()}`,
+      text: "Hi there! I'm your onboarding assistant. What's your name?",
+      sender: 'ai',
+    },
+  ])
   const [currentStep, setCurrentStep] = useState('name')
   const [input, setInput] = useState('')
   const [isTyping, setIsTyping] = useState(false)
@@ -25,52 +53,33 @@ export function OnBoarding() {
     imageUrl: '',
     role: null,
   })
-
-  // References
+  const [showEditModal, setShowEditModal] = useState(false)
+  // Counter to generate unique IDs
+  const messageIdCounter = useRef(1)
+  const config = useConfig()
   const messagesEndRef = useRef(null)
   const fileInputRef = useRef(null)
-
-  // Wagmi hooks
-  const { address } = useAccount()
-  const { writeContractAsync, isPending: isMinting } = useWriteContract()
-  const { data: profileData, isLoading: isProfileLoading } = useReadContract({
-    ...getProfileConfig,
-    args: [address],
-    enabled: !!address,
-  })
-
-  // Check if user already has a profile
-  useEffect(() => {
-    if (profileData && !isProfileLoading) {
-      toast.info('You already have a profile! Redirecting to dashboard...')
-
-    }
-    console.log('Profile data:', profileData);
-  }, [profileData, isProfileLoading])
-
-  // Initial message
-  useEffect(() => {
-    if (messages.length === 0) {
-      setTimeout(() => {
-        addBotMessage(
-          "Hi there! I'm your onboarding assistant. What's your name?"
-        )
-      }, 500)
-    }
-  }, [])
 
   // Auto-scroll to bottom of messages
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
   }, [messages])
 
+  // Helper to generate unique IDs
+  const generateUniqueId = (prefix) => {
+    messageIdCounter.current += 1
+    return `${prefix}-${Date.now()}-${messageIdCounter.current}`
+  }
+
   // Helper to add a bot message with typing animation
-  const addBotMessage = (text, delay = 1000) => {
+  const addBotMessage = (text) => {
     setIsTyping(true)
+
+    const typingId = generateUniqueId('ai-typing')
     setMessages((prev) => [
       ...prev,
       {
-        id: Date.now(),
+        id: typingId,
         text: '',
         sender: 'ai',
         isTyping: true,
@@ -80,25 +89,29 @@ export function OnBoarding() {
     setTimeout(() => {
       setIsTyping(false)
       setMessages((prev) =>
-        prev
-          .filter((msg) => !msg.isTyping)
-          .concat({
-            id: Date.now(),
-            text,
-            sender: 'ai',
-          })
+        prev.map((msg) =>
+          msg.id === typingId
+            ? {
+                id: generateUniqueId('ai'), // Generate new ID for completed message
+                text,
+                sender: 'ai',
+                isTyping: false,
+              }
+            : msg
+        )
       )
-    }, delay)
+    }, 500)
   }
 
   // Helper to add a user message
-  const addUserMessage = (text) => {
+  const addUserMessage = (text, imageUrl = null) => {
     setMessages((prev) => [
       ...prev,
       {
-        id: Date.now(),
+        id: generateUniqueId('user'),
         text,
         sender: 'user',
+        imageUrl,
       },
     ])
   }
@@ -106,7 +119,7 @@ export function OnBoarding() {
   // Handle name submission
   const handleSubmit = (e) => {
     e.preventDefault()
-    if (!input.trim()) return
+    if (!input.trim() || isTyping) return
 
     if (currentStep === 'name') {
       const nameValue = input.trim()
@@ -114,12 +127,10 @@ export function OnBoarding() {
       setUserData((prev) => ({ ...prev, name: nameValue }))
       setInput('')
 
-      setTimeout(() => {
-        addBotMessage(
-          `Nice to meet you, ${nameValue}! Please upload a profile picture.`
-        )
-        setCurrentStep('image')
-      }, 500)
+      addBotMessage(
+        `Nice to meet you, ${nameValue}! Please upload a profile picture.`
+      )
+      setCurrentStep('image')
     }
   }
 
@@ -130,16 +141,11 @@ export function OnBoarding() {
 
     try {
       setLoading(true)
-      // Set image URL
       const imageUrl = await uploadToIpfs(file)
       setUserData((prev) => ({ ...prev, imageUrl }))
 
-      // Add success message
-      addUserMessage('Image uploaded successfully!')
-      setTimeout(() => {
-        addBotMessage('Great photo! What role do you identify with?')
-        setCurrentStep('role')
-      }, 500)
+      // Only show preview, don't advance to next step yet
+      toast.success('Image uploaded successfully!')
     } catch (error) {
       toast.error('Image upload failed. Please try again.')
       console.error('Upload error:', error)
@@ -148,56 +154,134 @@ export function OnBoarding() {
     }
   }
 
-  // Handle role selection
-  const handleRoleSelect = (role) => {
-    setUserData((prev) => ({ ...prev, role }))
+  const handleFinalImageSubmission = () => {
+    if (userData.imageUrl) {
+      // Add user confirmation message with their chosen image
+      addUserMessage("I'm happy with this profile picture", userData.imageUrl)
 
-    const roleText = role.charAt(0).toUpperCase() + role.slice(1)
-    addUserMessage(`I'm a ${roleText}`)
-
-    setTimeout(() => {
-      addBotMessage(
-        `Thank you! You've been registered as a ${roleText}. Click 'Complete Onboarding' to finish.`
-      )
-      setCurrentStep('complete')
-    }, 500)
-  }
-
-  // Mint profile on blockchain
-  const mintProfile = async () => {
-    try {
-      setLoading(true)
-
-      // Prepare metadata
-      const metadata = {
-        name: userData.name,
-        image: userData.imageUrl,
-        role: userData.role,
-      }
-
-      const profileURI = await uploadToIpfsJson(metadata);
-
-      await writeContractAsync({
-        ...createProfileConfig,
-        args: [profileURI],
-      })
-
-      toast.success('Profile created successfully!')
-      addBotMessage(
-        'Your profile has been created on the blockchain. Welcome to Conneqt!'
-      )
-
-      // Redirect to dashboard after successful minting
-      // router.push('/dashboard')
-    } catch (error) {
-      toast.error('Profile creation failed. Please try again.')
-      console.error('Minting error:', error)
-    } finally {
-      setLoading(false)
+      // Bot response moves to next step
+      addBotMessage('Great photo! What role do you identify with?')
+      setCurrentStep('role')
+    } else {
+      toast.error('Please upload an image first')
     }
   }
 
-  // UI Components for different steps
+  // Handle role selection
+  const handleRoleSelect = (role) => {
+    setUserData((prev) => ({ ...prev, role }))
+    const roleText = role.charAt(0).toUpperCase() + role.slice(1)
+    addUserMessage(`I'm a ${roleText}`)
+
+    addBotMessage(
+      <>
+        <p>Thank you! Your profile is now ready:</p>
+        <div className='mt-2 p-3 bg-gray-700 rounded-lg'>
+          <div className='flex items-center gap-3'>
+            {userData.imageUrl && (
+              <div className='w-10 h-10 rounded-full overflow-hidden flex-shrink-0'>
+                <Image
+                  src={userData.imageUrl}
+                  alt={userData.name}
+                  width={40}
+                  height={40}
+                  className='object-cover w-full h-full'
+                />
+              </div>
+            )}
+            <div>
+              <p className='font-medium'>{userData.name}</p>
+              <p className='text-sm text-gray-300'>{roleText}</p>
+            </div>
+          </div>
+          <Button
+            variant='ghost'
+            size='sm'
+            className='mt-2 text-purple-400 hover:text-purple-300 p-0'
+            onClick={() => setShowEditModal(true)}>
+            <Pencil className='h-3 w-3 mr-1' />
+            Edit Profile
+          </Button>
+        </div>
+        <p className='mt-2'>
+          Everything looks good? Click 'Continue to Dashboard' to proceed.
+        </p>
+      </>
+    )
+    setCurrentStep('complete')
+  }
+
+  const handleEditProfile = () => {
+    addBotMessage(
+      <>
+        <p>Your profile has been updated:</p>
+        <div className='mt-2 p-3 bg-gray-700 rounded-lg'>
+          <div className='flex items-center gap-3'>
+            {userData.imageUrl && (
+              <div className='w-10 h-10 rounded-full overflow-hidden flex-shrink-0'>
+                <Image
+                  src={userData.imageUrl}
+                  alt={userData.name}
+                  width={40}
+                  height={40}
+                  className='object-cover w-full h-full'
+                />
+              </div>
+            )}
+            <div>
+              <p className='font-medium'>{userData.name}</p>
+              <p className='text-sm text-gray-300'>
+                {userData.role.charAt(0).toUpperCase() + userData.role.slice(1)}
+              </p>
+            </div>
+          </div>
+        </div>
+        <p className='mt-2'>Click 'Continue to Dashboard' to proceed.</p>
+      </>
+    )
+    setShowEditModal(false)
+  }
+
+  const handleCompletionClick = async () => {
+    setLoading(true)
+    setTimeout(async () => {
+      try {
+        const { name, imageUrl, role } = userData
+        const ipfsUri = await uploadToIpfsJson({
+          name,
+          image: imageUrl,
+          role,
+        })
+        const txr = await writeContract(config, {
+          ...createProfileConfig,
+          args: [ipfsUri],
+        })
+        if (!txr) {
+          throw new Error('Transaction refused')
+        }
+        await waitForTransactionReceipt(config, {
+          hash: txr,
+        })
+        setLoading(false)
+        addBotMessage(
+          'Your profile has been created. Welcome to Conneqt!. \n Redirecting you to the dashboard...'
+        )
+
+        if (typeof onComplete === 'function') {
+          setTimeout(() => onComplete(), 1000)
+        }
+      } catch (e) {
+        setLoading(false)
+        toast.error(
+          e.details || e.message || 'Error creating profile. Please try again.'
+        )
+        addBotMessage(
+          'There was an error creating your profile. Please try again.'
+        )
+      }
+    }, 1500)
+  }
+
   const renderInputSection = () => {
     switch (currentStep) {
       case 'name':
@@ -224,7 +308,7 @@ export function OnBoarding() {
 
       case 'image':
         return (
-          <div className='flex flex-col gap-4'>
+          <div className='flex flex-col items-center gap-4'>
             <input
               type='file'
               ref={fileInputRef}
@@ -232,9 +316,11 @@ export function OnBoarding() {
               accept='image/*'
               className='hidden'
             />
-            <div className='flex items-center justify-center gap-4'>
-              {userData.imageUrl ? (
-                <div className='relative w-16 h-16 rounded-full overflow-hidden border-2 border-purple-400'>
+
+            {/* Show larger preview if image exists */}
+            {userData.imageUrl ? (
+              <div className='flex flex-col items-center'>
+                <div className='relative w-32 h-32 rounded-full overflow-hidden border-2 border-purple-400 mb-4'>
                   <Image
                     src={userData.imageUrl}
                     alt='Profile preview'
@@ -242,11 +328,24 @@ export function OnBoarding() {
                     className='object-cover'
                   />
                 </div>
-              ) : null}
+                <p className='text-gray-400 text-sm mb-4'>
+                  This is how your profile picture will look
+                </p>
+              </div>
+            ) : (
+              <div className='bg-gray-800/50 rounded-xl p-8 mb-4 text-center'>
+                <Upload className='h-12 w-12 text-gray-500 mx-auto mb-3' />
+                <p className='text-gray-400'>
+                  Please upload a profile picture to continue
+                </p>
+              </div>
+            )}
 
+            <div className='flex items-center gap-4'>
               <Button
                 onClick={() => fileInputRef.current?.click()}
-                className='flex items-center gap-2 bg-purple-600 hover:bg-purple-700'
+                variant='outline'
+                className='flex items-center gap-2 border-gray-700 text-gray-300 hover:bg-gray-800'
                 disabled={loading}>
                 {loading ? (
                   <>
@@ -257,13 +356,21 @@ export function OnBoarding() {
                   <>
                     <Upload className='h-4 w-4' />
                     <span>
-                      {userData.imageUrl
-                        ? 'Change Image'
-                        : 'Upload Profile Picture'}
+                      {userData.imageUrl ? 'Change Image' : 'Select Image'}
                     </span>
                   </>
                 )}
               </Button>
+
+              {userData.imageUrl && (
+                <Button
+                  onClick={handleFinalImageSubmission}
+                  className='bg-purple-600 hover:bg-purple-700'
+                  disabled={loading}>
+                  <Check className='h-4 w-4 mr-2' />
+                  <span>Use This Photo</span>
+                </Button>
+              )}
             </div>
           </div>
         )
@@ -273,7 +380,7 @@ export function OnBoarding() {
           <div className='grid grid-cols-3 gap-4'>
             {['doctor', 'client', 'researcher'].map((role) => (
               <Button
-                key={role}
+                key={`role-${role}`}
                 onClick={() => handleRoleSelect(role)}
                 variant='outline'
                 className='flex flex-col items-center gap-2 p-4 h-auto border-purple-400/50 text-purple-400 hover:bg-purple-400/10'>
@@ -288,16 +395,16 @@ export function OnBoarding() {
         return (
           <div className='flex justify-center'>
             <Button
-              onClick={mintProfile}
+              onClick={handleCompletionClick}
               className='px-8 bg-purple-600 hover:bg-purple-700'
-              disabled={loading || isMinting}>
-              {loading || isMinting ? (
+              disabled={loading}>
+              {loading ? (
                 <>
                   <Loader2 className='h-4 w-4 animate-spin mr-2' />
                   <span>Creating Profile...</span>
                 </>
               ) : (
-                <span>Complete Onboarding</span>
+                <span>Continue to Dashboard</span>
               )}
             </Button>
           </div>
@@ -309,68 +416,148 @@ export function OnBoarding() {
   }
 
   return (
-    <Card className='flex flex-col mt-20 h-[700px] shadow-xl rounded-xl overflow-hidden border border-purple-400/30 bg-gray-900 w-[1200px]'>
-      {/* Header */}
-      <div className='bg-gray-800 p-4 text-purple-400 flex items-center gap-2 border-b border-purple-400/20'>
-        <MessageCircle className='h-5 w-5' />
-        <h2 className='font-semibold'>Onboarding Assistant</h2>
-      </div>
+    <>
+      <Card className='flex flex-col mt-20 h-[700px] shadow-xl rounded-xl overflow-hidden border border-purple-400/30 bg-gray-900 w-[1200px]'>
+        <div className='bg-gray-800 p-4 text-purple-400 flex items-center gap-2 border-b border-purple-400/20'>
+          <MessageCircle className='h-5 w-5' />
+          <h2 className='font-semibold'>Onboarding Assistant</h2>
+        </div>
 
-      {/* Messages */}
-      <div className='flex-1 overflow-y-auto p-6 bg-gray-900 space-y-4'>
-        {messages.map((message) => (
-          <div
-            key={message.id}
-            className={`flex ${
-              message.sender === 'ai' ? 'justify-start' : 'justify-end'
-            }`}>
+        <div className='flex-1 overflow-y-auto p-6 bg-gray-900 space-y-4'>
+          {messages.map((message) => (
             <div
-              className={`flex items-start gap-3 max-w-[80%] ${
-                message.sender === 'ai' ? 'flex-row' : 'flex-row-reverse'
+              key={message.id}
+              className={`flex ${
+                message.sender === 'ai' ? 'justify-start' : 'justify-end'
               }`}>
-              <div className='flex-shrink-0 mt-1'>
-                {message.sender === 'ai' ? (
-                  <div className='bg-purple-500 text-white w-8 h-8 rounded-full flex items-center justify-center'>
-                    <MessageCircle className='h-4 w-4' />
-                  </div>
-                ) : (
-                  <Avatar className='w-8 h-8 bg-slate-300'>
-                    <User className='h-4 w-4' />
-                  </Avatar>
-                )}
-              </div>
               <div
-                className={`rounded-lg p-4 ${
-                  message.sender === 'ai'
-                    ? 'bg-gray-800 text-gray-100'
-                    : 'bg-purple-600 text-white'
+                className={`flex items-start gap-3 max-w-[80%] ${
+                  message.sender === 'ai' ? 'flex-row' : 'flex-row-reverse'
                 }`}>
-                {message.isTyping ? (
-                  <div className='flex space-x-1 items-center h-6'>
-                    <div
-                      className='w-2 h-2 rounded-full bg-purple-400 animate-bounce'
-                      style={{ animationDelay: '0ms' }}></div>
-                    <div
-                      className='w-2 h-2 rounded-full bg-purple-400 animate-bounce'
-                      style={{ animationDelay: '150ms' }}></div>
-                    <div
-                      className='w-2 h-2 rounded-full bg-purple-400 animate-bounce'
-                      style={{ animationDelay: '300ms' }}></div>
-                  </div>
-                ) : (
-                  <p>{message.text}</p>
-                )}
+                <div className='flex-shrink-0 mt-1'>
+                  {message.sender === 'ai' ? (
+                    <div className='bg-purple-500 text-white w-8 h-8 rounded-full flex items-center justify-center'>
+                      <MessageCircle className='h-4 w-4' />
+                    </div>
+                  ) : message.imageUrl ? (
+                    <div className='w-8 h-8 rounded-full overflow-hidden'>
+                      <Image
+                        src={message.imageUrl}
+                        alt='Profile'
+                        width={32}
+                        height={32}
+                        className='object-cover w-full h-full'
+                      />
+                    </div>
+                  ) : (
+                    <Avatar className='w-8 h-8 bg-slate-300'>
+                      <User className='h-4 w-4' />
+                    </Avatar>
+                  )}
+                </div>
+                <div
+                  className={`rounded-lg p-4 ${
+                    message.sender === 'ai'
+                      ? 'bg-gray-800 text-gray-100'
+                      : 'bg-purple-600 text-white'
+                  }`}>
+                  {message.isTyping ? (
+                    <div className='flex space-x-1 items-center h-6'>
+                      <div
+                        className='w-2 h-2 rounded-full bg-purple-400 animate-bounce'
+                        style={{ animationDelay: '0ms' }}></div>
+                      <div
+                        className='w-2 h-2 rounded-full bg-purple-400 animate-bounce'
+                        style={{ animationDelay: '150ms' }}></div>
+                      <div
+                        className='w-2 h-2 rounded-full bg-purple-400 animate-bounce'
+                        style={{ animationDelay: '300ms' }}></div>
+                    </div>
+                  ) : (
+                    <div>{message.text}</div>
+                  )}
+                </div>
               </div>
             </div>
-          </div>
-        ))}
-        <div ref={messagesEndRef} />
-      </div>
+          ))}
+          <div ref={messagesEndRef} />
+        </div>
 
-      {/* Input Area */}
-      <div className='p-6 border-t border-purple-400/20 bg-gray-800'>
-        {renderInputSection()}
-      </div>
-    </Card>
+        <div className='p-6 border-t border-purple-400/20 bg-gray-800'>
+          {renderInputSection()}
+        </div>
+      </Card>
+
+      <Dialog
+        open={showEditModal}
+        onOpenChange={setShowEditModal}>
+        <DialogContent className='bg-gray-900 border border-purple-500/30 text-white'>
+          <DialogHeader>
+            <DialogTitle className='text-xl text-purple-400'>
+              Edit Profile
+            </DialogTitle>
+          </DialogHeader>
+
+          <div className='py-4 space-y-4'>
+            <div className='flex justify-center mb-4'>
+              {userData.imageUrl && (
+                <div className='relative w-24 h-24 rounded-full overflow-hidden border-2 border-purple-400'>
+                  <Image
+                    src={userData.imageUrl}
+                    alt={userData.name}
+                    fill
+                    className='object-cover'
+                  />
+                </div>
+              )}
+            </div>
+
+            <div className='space-y-2'>
+              <label className='text-sm text-gray-400'>Name</label>
+              <Input
+                value={userData.name}
+                onChange={(e) =>
+                  setUserData((prev) => ({ ...prev, name: e.target.value }))
+                }
+                className='bg-gray-800 border-gray-700 text-white'
+              />
+            </div>
+
+            <div className='space-y-2'>
+              <label className='text-sm text-gray-400'>Role</label>
+              <Select
+                value={userData.role}
+                onValueChange={(value) =>
+                  setUserData((prev) => ({ ...prev, role: value }))
+                }>
+                <SelectTrigger className='bg-gray-800 border-gray-700 text-white'>
+                  <SelectValue placeholder='Select your role' />
+                </SelectTrigger>
+                <SelectContent className='bg-gray-800 border-gray-700 text-white'>
+                  <SelectItem value='doctor'>Doctor</SelectItem>
+                  <SelectItem value='client'>Client</SelectItem>
+                  <SelectItem value='researcher'>Researcher</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+
+          <DialogFooter>
+            <Button
+              variant='outline'
+              onClick={() => setShowEditModal(false)}
+              className='border-gray-700 text-gray-300 hover:bg-gray-800'>
+              Cancel
+            </Button>
+            <Button
+              onClick={handleEditProfile}
+              className='bg-purple-600 hover:bg-purple-700'>
+              <Check className='h-4 w-4 mr-2' />
+              Save Changes
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </>
   )
 }

@@ -44,7 +44,6 @@ import {
 import { getJsonFromIpfs, uploadToIpfs, uploadToIpfsJson } from '@/contract'
 import { useWalletContext } from '@/context/WalletContext'
 
-// Enhanced skeleton loader with gradient animation
 const ProposalSkeleton = () => (
   <div className='bg-gray-900/50 border border-purple-400/10 rounded-xl p-6 backdrop-blur-sm overflow-hidden space-y-4'>
     <div className='flex items-center gap-3 mb-4'>
@@ -228,10 +227,10 @@ const ChannelPage = () => {
         await fetchCompany()
         const joined = await checkJoined()
         setHasJoined(joined)
+        setIsLoading(false)
       } catch (error) {
         toast.error('Failed to load channel data')
         router.push('/channels')
-      } finally {
         setIsLoading(false)
       }
     }

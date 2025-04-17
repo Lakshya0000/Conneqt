@@ -10,6 +10,7 @@ import Navbar from './components/Navbar'
 import { Toaster } from 'sonner'
 import CreateChannel from './components/CreateChannel'
 import { ChannelProvider } from '@/context/WalletContext'
+import { usePathname } from 'next/navigation'
 
 const geistSans = Geist({
   variable: '--font-geist-sans',
@@ -31,6 +32,25 @@ const config = createConfig({
 
 const queryClient = new QueryClient()
 
+// Wrapper component to check current path
+function AppContent({ children }) {
+  const pathname = usePathname()
+  const showNavbar = pathname !== '/'
+
+  return (
+    <>
+      {showNavbar && <Navbar />}
+      {children}
+      <CreateChannel />
+      <Toaster
+        richColors
+        position='top-center'
+        toastOptions={{ duration: 3000 }}
+      />
+    </>
+  )
+}
+
 export default function RootLayout({ children }) {
   return (
     <html lang='en'>
@@ -40,14 +60,7 @@ export default function RootLayout({ children }) {
           <QueryClientProvider client={queryClient}>
             <Provider>
               <ChannelProvider>
-                <Navbar />
-                {children}
-                <CreateChannel />
-              <Toaster
-                richColors
-                position='top-center'
-                toastOptions={{ duration: 3000 }}
-              />
+                <AppContent>{children}</AppContent>
               </ChannelProvider>
             </Provider>
           </QueryClientProvider>

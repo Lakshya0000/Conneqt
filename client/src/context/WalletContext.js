@@ -1,40 +1,62 @@
-import { getProfileConfig } from "@/contract/function";
-import { createContext, useContext, useEffect, useState } from "react";
-import { useAccount, useConfig } from "wagmi";
-import { readContract } from "wagmi/actions";
+import { getJsonFromIpfs } from '@/contract'
+import { getProfileConfig } from '@/contract/function'
+import { createContext, useContext, useEffect, useState } from 'react'
+import { idchain } from 'viem/chains'
+import { useAccount, useConfig } from 'wagmi'
+import { readContract } from 'wagmi/actions'
 
-const channelContext = createContext(null);
+const channelContext = createContext(null)
 
 export function ChannelProvider({ children }) {
-    const [profileData, setProfileData] = useState([]);
-    const {address,isConnected} = useAccount();
-    const config = useConfig();
-    console.log("Address:", address)
-    console.log("Profile context : ",profileData)
-    const fetchProfile = async () => {
-        if(!address || !isConnected){
-            setProfileData([]);
-            return;
+  const [loading, setLoading] = useState(true)
+  const [profileData, setProfileData] = useState([])
+  const [profileDetails, setProfileDetails] = useState({})
+  const { address, isConnected } = useAccount()
+  const config = useConfig()
+  const fetchProfile = async () => {
+    try {
+        setLoading(true)
+      if (!address || !isConnected) {
+        setProfileData([])
+        return
+      }
+      const profile = await readContract(config, {
+        ...getProfileConfig,
+        args: [address],
+      })
+      console.log(profile)
+      if(profile && profile.length > 0){
+        const obj = await getJsonFromIpfs(profile[1]);
+        if(obj){
+            setProfileDetails({...obj, id: Number(profile[0])})
         }
-        const profile = await readContract(config, {...getProfileConfig, args:[address]});
-        console.log(profile)
-        setProfileData(profile);
+      }
+      setProfileData(profile)
+      setLoading(false)
+    } catch (e) {
+      console.log('Error fetching profile: ', e)
+      setLoading(false)
     }
-    useEffect(() => {
-        fetchProfile();
-    },[address,isConnected])
-    return (
-        <channelContext.Provider value={{profileData,fetchProfile}}>
-        {children}
-        </channelContext.Provider>
-    );
+  }
+  useEffect(() => {
+    if(config && address){
+        console.log("Fetching profile...")
+        console.log("Address : ",address)
+        console.log("Config : ",config)
+        fetchProfile()
+    }
+  }, [config,address, isConnected])
+  return (
+    <channelContext.Provider value={{ profileData, fetchProfile, loading, profileDetails }}>
+      {children}
+    </channelContext.Provider>
+  )
 }
 
 export function useWalletContext() {
-    const context = useContext(channelContext);
-    if (!context) {
-        throw new Error("useWalletContext must be used within a ChannelProvider");
-    }
-    // console.log("context : ",context)
-    return context;
+  const context = useContext(channelContext)
+  if (!context) {
+    throw new Error('useWalletContext must be used within a ChannelProvider')
+  }
+  return context
 }
