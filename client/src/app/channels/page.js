@@ -162,7 +162,7 @@ const Page = () => {
   },[channelsData,channelsLoading,companiesError])
   
   return (
-    <div className='min-h-screen bg-gray-950'>
+    <div className='mt-20 min-h-screen bg-gray-950'>
       <div className='max-w-7xl mx-auto px-6 py-20'>
         <div className='text-center mb-12'>
           <h1 className='text-4xl md:text-5xl font-bold bg-gradient-to-r from-purple-400 to-pink-600 text-transparent bg-clip-text mb-4'>

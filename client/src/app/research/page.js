@@ -8,6 +8,34 @@ import { formatEther, parseEther } from "viem";
 import { toast } from "sonner";
 import { escrowABI, escrowAddress } from "@/contract/contract";
 
+import ResearchCard from "../components/ResearchCard";
+// Add this helper function at the top of your Page component
+const useCountdown = (deadline) => {
+    const [timeLeft, setTimeLeft] = useState("");
+
+    useEffect(() => {
+        const timer = setInterval(() => {
+            const now = Math.floor(Date.now() / 1000);
+            const remaining = deadline - now;
+
+            if (remaining <= 0) {
+                setTimeLeft("Expired");
+                clearInterval(timer);
+            } else {
+                const days = Math.floor(remaining / (24 * 60 * 60));
+                const hours = Math.floor((remaining % (24 * 60 * 60)) / (60 * 60));
+                const minutes = Math.floor((remaining % (60 * 60)) / 60);
+                const seconds = remaining % 60;
+                setTimeLeft(`${days}d ${hours}h ${minutes}m ${seconds}s`);
+            }
+        }, 1000);
+
+        return () => clearInterval(timer);
+    }, [deadline]);
+
+    return timeLeft;
+};
+
 const Page = () => {
     const [showModal, setShowModal] = useState(false);
     const { writeContractAsync } = useWriteContract();
@@ -62,30 +90,17 @@ const Page = () => {
 
             const title = project.result[0];
             const description = "This is Description";
-            const amount = Number(formatEther(project.result[2]));
-            console.log("Amount:", amount);
+            const amount = formatEther(project.result[2]);
             const currentFunding = formatEther(project.result[3]);
-            const deadlineInSeconds = Number(project.result[4]); // Deadline in seconds
-
-            // Calculate remaining time
-            const currentTimeInSeconds = Math.floor(Date.now() / 1000); // Current time in seconds
-            const remainingTimeInSeconds = deadlineInSeconds - currentTimeInSeconds;
-
-            let deadline;
-            if (remainingTimeInSeconds > 0) {
-                const days = Math.floor(remainingTimeInSeconds / (24 * 60 * 60));
-                const hours = Math.floor((remainingTimeInSeconds % (24 * 60 * 60)) / (60 * 60));
-                deadline = `${days} days, ${hours} hours remaining`;
-            } else {
-                deadline = "Expired";
-            }
+            const deadlineInSeconds = Number(project.result[4]);
 
             return {
                 id: index + 1,
                 title,
-                amount: `${amount} ETH`,
-                deadline,
-                currentFunding: `${currentFunding} ETH`,
+                amount,
+                currentFunding,
+                deadlineInSeconds,
+                description,
             };
         });
 
@@ -136,7 +151,7 @@ const Page = () => {
 
             await contributeAsync({
                 ...contributeToResearchConfig,
-                args: [projectId],value: amountInWei
+                args: [projectId], value: amountInWei
             });
 
             alert("Contribution successful!");
@@ -179,48 +194,18 @@ const Page = () => {
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {researchData.map((research, index) => (
-                    <div
+                    <ResearchCard
                         key={index}
-                        className="bg-gray-800/50 p-6 rounded-xl shadow-xl border border-purple-400/30 hover:border-purple-400/50 transition-all duration-300 backdrop-blur-sm"
-                    >
-                        <h2 className="text-xl font-semibold text-purple-400 mb-3">
-                            {research.title}
-                        </h2>
-                        <p className="text-gray-300 mb-4 line-clamp-3">
-                            {research.description}
-                        </p>
-                        <div className="flex items-center gap-2 text-purple-400 font-bold">
-                            <Coins className="w-5 h-5" />
-                            <span>Funding Required: {research.amount}</span>
-                        </div>
-                        <div className="flex items-center gap-2 text-purple-400 font-bold">
-                            <Coins className="w-5 h-5" />
-                            <span>Funding Recieved: {research.currentFunding}</span>
-                        </div>
-                        <div className="text-gray-400 text-sm mt-2">
-                            Deadline: {research.deadline}
-                        </div>
-                        <div className="mt-4">
-                            <input
-                                type="text"
-                                placeholder="Enter amount (ETH)"
-                                value={contributionAmounts[research.id] || ""}
-                                onChange={(e) =>
-                                    setContributionAmounts((prev) => ({
-                                        ...prev,
-                                        [research.id]: e.target.value,
-                                    }))
-                                }
-                                className="w-full p-2 bg-gray-700 border border-gray-600 rounded-lg text-white"
-                            />
-                            <button
-                                onClick={() => handleContribute(research.id)}
-                                className="mt-2 w-full px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-lg"
-                            >
-                                Fund
-                            </button>
-                        </div>
-                    </div>
+                        research={research}
+                        contributionAmount={contributionAmounts[research.id]}
+                        onContributionChange={(value) =>
+                            setContributionAmounts((prev) => ({
+                                ...prev,
+                                [research.id]: value,
+                            }))
+                        }
+                        onContribute={() => handleContribute(research.id)}
+                    />
                 ))}
             </div>
 
