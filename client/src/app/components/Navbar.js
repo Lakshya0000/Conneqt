@@ -6,6 +6,7 @@ import WalletProvider from '@/components/wallet';
 import { Network } from 'lucide-react';
 
 const Navbar = () => {
+  
     return (
         <div>
              {/* Navigation */}
