@@ -8,7 +8,7 @@ import { readContract } from 'wagmi/actions'
 const channelContext = createContext(null)
 
 export function ChannelProvider({ children }) {
-  const [loading, setLoading] = useState(true)
+  const [loading, setLoading] = useState(false)
   const [profileData, setProfileData] = useState([])
   const [profileDetails, setProfileDetails] = useState({})
   const { address, isConnected } = useAccount()
@@ -39,11 +39,13 @@ export function ChannelProvider({ children }) {
     }
   }
   useEffect(() => {
-    if(config && address){
+    if(config){
+        setLoading(true)
         console.log("Fetching profile...")
         console.log("Address : ",address)
         console.log("Config : ",config)
         fetchProfile()
+        setLoading(false)
     }
   }, [config,address, isConnected])
   return (

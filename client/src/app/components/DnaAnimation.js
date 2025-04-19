@@ -39,13 +39,23 @@ export default function DNAAnimation() {
       });
     }
 
+    const colors = {
+      primary: {
+        helix: 'rgba(147, 51, 234, ', // purple-600
+        connection: 'rgba(219, 39, 119, ', // pink-600
+        particle: 'rgba(192, 132, 252, ', // purple-400
+      },
+      background: 'rgba(9, 9, 11, 0.05)', // gray-950
+    };
+
     function drawHelix(x, y, rotation, opacity, scale) {
-      const amplitude = 30 * scale;
+      const amplitude = 35 * scale;
       const frequency = 0.02;
       const points = 40;
-      
-      ctx.strokeStyle = `rgba(147, 51, 234, ${opacity})`;
-      ctx.lineWidth = 2;
+
+      // Main strands
+      ctx.lineWidth = 2.5;
+      ctx.strokeStyle = colors.primary.helix + opacity + ')';
 
       for (let strand = 0; strand < 2; strand++) {
         ctx.beginPath();
@@ -53,56 +63,81 @@ export default function DNAAnimation() {
           const xOffset = i * 10;
           const phase = strand * Math.PI;
           const yOffset = Math.sin(frequency * xOffset + phase + rotation) * amplitude;
-          
+
           const rotatedX = x + xOffset * Math.cos(rotation) - yOffset * Math.sin(rotation);
           const rotatedY = y + xOffset * Math.sin(rotation) + yOffset * Math.cos(rotation);
 
-          if (i === 0) {
-            ctx.moveTo(rotatedX, rotatedY);
-          } else {
-            ctx.lineTo(rotatedX, rotatedY);
-          }
+          if (i === 0) ctx.moveTo(rotatedX, rotatedY);
+          else ctx.lineTo(rotatedX, rotatedY);
         }
         ctx.stroke();
 
+        // Connection lines with gradient
         for (let i = 0; i < points; i += 4) {
           const xOffset = i * 10;
           const y1 = Math.sin(frequency * xOffset + rotation) * amplitude;
           const y2 = Math.sin(frequency * xOffset + Math.PI + rotation) * amplitude;
-          
+
           const rotatedX1 = x + xOffset * Math.cos(rotation) - y1 * Math.sin(rotation);
           const rotatedY1 = y + xOffset * Math.sin(rotation) + y1 * Math.cos(rotation);
           const rotatedX2 = x + xOffset * Math.cos(rotation) - y2 * Math.sin(rotation);
           const rotatedY2 = y + xOffset * Math.sin(rotation) + y2 * Math.cos(rotation);
 
+          const gradient = ctx.createLinearGradient(rotatedX1, rotatedY1, rotatedX2, rotatedY2);
+          gradient.addColorStop(0, colors.primary.helix + (opacity * 0.8) + ')');
+          gradient.addColorStop(1, colors.primary.connection + (opacity * 0.8) + ')');
+
           ctx.beginPath();
+          ctx.strokeStyle = gradient;
           ctx.moveTo(rotatedX1, rotatedY1);
           ctx.lineTo(rotatedX2, rotatedY2);
           ctx.stroke();
+
+          // Add glow effect
+          ctx.save();
+          ctx.shadowColor = colors.primary.particle + '1)';
+          ctx.shadowBlur = 10;
+          ctx.beginPath();
+          ctx.arc(rotatedX1, rotatedY1, 2, 0, Math.PI * 2);
+          ctx.arc(rotatedX2, rotatedY2, 2, 0, Math.PI * 2);
+          ctx.fillStyle = colors.primary.particle + (opacity * 0.9) + ')';
+          ctx.fill();
+          ctx.restore();
         }
       }
     }
 
     function drawDataStream(x, y, length, opacity) {
-      ctx.strokeStyle = `rgba(219, 39, 119, ${opacity})`;
+      // Gradient stream
+      const gradient = ctx.createLinearGradient(x, y, x, y + length);
+      gradient.addColorStop(0, 'rgba(147, 51, 234, 0)'); // transparent to purple
+      gradient.addColorStop(0.5, colors.primary.connection + opacity + ')');
+      gradient.addColorStop(1, 'rgba(147, 51, 234, 0)'); // purple to transparent
+
+      ctx.strokeStyle = gradient;
       ctx.lineWidth = 2;
       ctx.beginPath();
       ctx.moveTo(x, y);
       ctx.lineTo(x, y + length);
       ctx.stroke();
 
+      // Glowing particles
       for (let i = 0; i < 3; i++) {
         const particleY = y + ((y + length - y) * (i / 2));
-        ctx.fillStyle = `rgba(219, 39, 119, ${opacity})`;
+        ctx.save();
+        ctx.shadowColor = colors.primary.particle + '1)';
+        ctx.shadowBlur = 15;
+        ctx.fillStyle = colors.primary.particle + opacity + ')';
         ctx.beginPath();
-        ctx.arc(x, particleY, 2, 0, Math.PI * 2);
+        ctx.arc(x, particleY, 2.5, 0, Math.PI * 2);
         ctx.fill();
+        ctx.restore();
       }
     }
 
     function animate() {
       if (!ctx || !canvas) return;
-      
+
       ctx.clearRect(0, 0, canvas.width, canvas.height);
       ctx.fillStyle = 'rgba(10, 10, 31, 0.05)';
       ctx.fillRect(0, 0, canvas.width, canvas.height);
@@ -136,5 +171,10 @@ export default function DNAAnimation() {
     return () => window.removeEventListener('resize', handleResize);
   }, []);
 
-  return <canvas ref={canvasRef} className="fixed top-0 left-0 w-full h-full z-0" />;
+  return (
+    <canvas
+      ref={canvasRef}
+      className="fixed top-0 left-0 w-full h-full z-0 bg-gray-950"
+    />
+  );
 }

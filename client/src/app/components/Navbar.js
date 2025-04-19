@@ -4,9 +4,10 @@ import Link from 'next/link'
 
 import WalletProvider from '@/components/wallet';
 import { Network } from 'lucide-react';
+import { useWalletContext } from '@/context/WalletContext';
 
 const Navbar = () => {
-  
+    const {profileData} = useWalletContext()
     return (
         <div>
              {/* Navigation */}
@@ -20,7 +21,7 @@ const Navbar = () => {
                         <motion.div
                           className='flex items-center space-x-2 group'
                           whileHover={{ scale: 1.05 }}>
-                          <Link href='/'>
+                          <Link href={profileData ? '/home' : '/'}>
                             <div className='relative cursor-pointer flex items-center'>
                               <Network className='w-8 h-8 text-purple-500 transition-transform group-hover:rotate-180 duration-700' />
                               <span className='ml-2 text-xl font-bold bg-gradient-to-r from-purple-400 to-pink-600 bg-clip-text text-transparent'>
