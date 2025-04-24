@@ -43,6 +43,7 @@ const Page = () => {
     const { writeContractAsync: contributeAsync } = useWriteContract(contributeToResearchConfig);
     const [researchData, setResearchData] = useState([]);
     const [contributionAmounts, setContributionAmounts] = useState({});
+    const [activeTab, setActiveTab] = useState("ongoing");
 
     const [newResearch, setNewResearch] = useState({
         title: '',
@@ -213,6 +214,50 @@ const Page = () => {
                     </motion.button>
                 </motion.div>
 
+                {/* Add Tab Navigation */}
+                <motion.div
+                    initial={{ opacity: 0, y: -20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className="mb-8 relative"
+                >
+                    <div className="flex space-x-2 p-1 bg-gray-800/30 rounded-xl backdrop-blur-sm w-fit mx-auto">
+                        <button
+                            onClick={() => setActiveTab("ongoing")}
+                            className={`relative px-6 py-2 rounded-lg transition-all duration-300 ${activeTab === "ongoing"
+                                    ? "text-white"
+                                    : "text-gray-400 hover:text-white"
+                                }`}
+                        >
+                            {activeTab === "ongoing" && (
+                                <motion.div
+                                    layoutId="tab-highlight"
+                                    className="absolute inset-0 bg-gradient-to-r from-purple-600 to-pink-600 rounded-lg"
+                                    style={{ zIndex: 0 }}
+                                    transition={{ type: "spring", bounce: 0.2, duration: 0.6 }}
+                                />
+                            )}
+                            <span className="relative z-10">Ongoing Projects</span>
+                        </button>
+                        <button
+                            onClick={() => setActiveTab("expired")}
+                            className={`relative px-6 py-2 rounded-lg transition-all duration-300 ${activeTab === "expired"
+                                    ? "text-white"
+                                    : "text-gray-400 hover:text-white"
+                                }`}
+                        >
+                            {activeTab === "expired" && (
+                                <motion.div
+                                    layoutId="tab-highlight"
+                                    className="absolute inset-0 bg-gradient-to-r from-purple-600 to-pink-600 rounded-lg"
+                                    style={{ zIndex: 0 }}
+                                    transition={{ type: "spring", bounce: 0.2, duration: 0.6 }}
+                                />
+                            )}
+                            <span className="relative z-10">Expired Projects</span>
+                        </button>
+                    </div>
+                </motion.div>
+
                 {/* Research Cards Grid */}
                 <motion.div
                     initial={{ opacity: 0 }}
@@ -220,50 +265,71 @@ const Page = () => {
                     transition={{ delay: 0.2 }}
                     className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
                 >
-                    {researchData.map((research, index) => (
-                        <motion.div
-                            key={index}
-                            initial={{ opacity: 0, y: 20 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            transition={{ delay: index * 0.1 }}
-                        >
-                            <ResearchCard
-                                research={research}
-                                contributionAmount={contributionAmounts[research.id]}
-                                onContributionChange={(value) =>
-                                    setContributionAmounts((prev) => ({
-                                        ...prev,
-                                        [research.id]: value,
-                                    }))
-                                }
-                                onContribute={() => handleContribute(research.id)}
-                            />
-                        </motion.div>
-                    ))}
+                    {researchData
+                        .filter(research => {
+                            const now = Math.floor(Date.now() / 1000);
+                            const isExpired = research.deadlineInSeconds < now;
+                            return activeTab === "ongoing" ? !isExpired : isExpired;
+                        })
+                        .map((research, index) => (
+                            <motion.div
+                                key={index}
+                                initial={{ opacity: 0, y: 20 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                transition={{ delay: index * 0.1 }}
+                                layout
+                            >
+                                <ResearchCard
+                                    research={research}
+                                    contributionAmount={contributionAmounts[research.id]}
+                                    onContributionChange={(value) =>
+                                        setContributionAmounts((prev) => ({
+                                            ...prev,
+                                            [research.id]: value,
+                                        }))
+                                    }
+                                    onContribute={() => handleContribute(research.id)}
+                                />
+                            </motion.div>
+                        ))}
                 </motion.div>
 
-                {/* Empty State */}
-                {researchData.length === 0 && (
-                    <motion.div
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
-                        className="text-center py-32"
-                    >
-                        <Sparkles className="w-16 h-16 text-purple-500/50 mx-auto mb-4" />
-                        <h3 className="text-xl font-semibold text-gray-300">No Research Projects Yet</h3>
-                        <p className="text-gray-500 mt-2 mb-8">Create your first research project to get started.</p>
-                        <motion.button
-                            whileHover={{ scale: 1.05 }}
-                            whileTap={{ scale: 0.95 }}
-                            onClick={() => setShowModal(true)}
-                            className="px-6 py-3 bg-gradient-to-r from-purple-600/20 to-pink-600/20 rounded-xl 
-                                     border border-purple-500/20 text-purple-400 hover:bg-gradient-to-r 
-                                     hover:from-purple-600 hover:to-pink-600 hover:text-white transition-all duration-300"
+                {/* Empty State - Modified */}
+                {researchData.filter(research => {
+                    const now = Math.floor(Date.now() / 1000);
+                    const isExpired = research.deadlineInSeconds < now;
+                    return activeTab === "ongoing" ? !isExpired : isExpired;
+                }).length === 0 && (
+                        <motion.div
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            className="text-center py-32"
                         >
-                            Create First Project
-                        </motion.button>
-                    </motion.div>
-                )}
+                            <Sparkles className="w-16 h-16 text-purple-500/50 mx-auto mb-4" />
+                            <h3 className="text-xl font-semibold text-gray-300">
+                                {activeTab === "ongoing"
+                                    ? "No Ongoing Research Projects"
+                                    : "No Expired Research Projects"}
+                            </h3>
+                            <p className="text-gray-500 mt-2 mb-8">
+                                {activeTab === "ongoing"
+                                    ? "Create a new research project to get started."
+                                    : "Previous projects will appear here once they expire."}
+                            </p>
+                            {activeTab === "ongoing" && (
+                                <motion.button
+                                    whileHover={{ scale: 1.05 }}
+                                    whileTap={{ scale: 0.95 }}
+                                    onClick={() => setShowModal(true)}
+                                    className="px-6 py-3 bg-gradient-to-r from-purple-600/20 to-pink-600/20 rounded-xl 
+                                         border border-purple-500/20 text-purple-400 hover:bg-gradient-to-r 
+                                         hover:from-purple-600 hover:to-pink-600 hover:text-white transition-all duration-300"
+                                >
+                                    Create First Project
+                                </motion.button>
+                            )}
+                        </motion.div>
+                    )}
 
                 {/* Modal */}
                 <AnimatePresence>
