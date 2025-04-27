@@ -149,7 +149,7 @@ const ChannelPage = () => {
           const proposal = proposalD.result
           const { title, docLink } = await getJsonFromIpfs(proposal[5])
           return {
-            id: Number(proposalIds[index]), 
+            id: Number(proposalIds[index]),
             title,
             description: proposal[0],
             createdBy: proposal[1],
@@ -220,7 +220,7 @@ const ChannelPage = () => {
       }
     }
 
-    if(profileData && profileData.length > 0) {
+    if (profileData && profileData.length > 0) {
       fetchChannelData()
     }
   }, [channelHash, router, profileData])
@@ -317,19 +317,17 @@ const ChannelPage = () => {
       }
 
       // Show uploading toast
-      proposalToast = toast.loading("Uploading document to IPFS...")
+      proposalToast = toast.loading('Uploading document to IPFS...')
 
       const docLink = await uploadToIpfs(document)
 
       toast.dismiss(proposalToast)
-      proposalToast = toast.loading("Preparing proposal metadata...")
+      proposalToast = toast.loading('Preparing proposal metadata...')
 
       const proposalUri = await uploadToIpfsJson({ title, docLink })
 
       toast.dismiss(proposalToast)
-      proposalToast = toast.loading(
-        "Submitting proposal to blockchain..."
-      )
+      proposalToast = toast.loading('Submitting proposal to blockchain...')
 
       const txr = await writeContract(config, {
         ...raiseProposalConfig,
@@ -352,7 +350,7 @@ const ChannelPage = () => {
         documentName: '',
       })
     } catch (e) {
-      if(proposalToast) toast.dismiss(proposalToast)
+      if (proposalToast) toast.dismiss(proposalToast)
       console.log(e)
       toast.error('Error submitting proposal')
     } finally {
@@ -388,7 +386,7 @@ const ChannelPage = () => {
       setProposalLoading(true)
       await fetchCompany()
     } catch (e) {
-      if(votingToast) toast.dismiss(votingToast)
+      if (votingToast) toast.dismiss(votingToast)
       console.log('Error voting on proposal : ', e)
       toast.error('Failed to vote on proposal')
     } finally {
@@ -424,7 +422,7 @@ const ChannelPage = () => {
   )
 
   // Loading state
-  if(profileLoading || !profileData || profileData.length === 0) {
+  if (profileLoading || !profileData || profileData.length === 0) {
     return <Loader />
   }
   if (isLoading) {
@@ -440,7 +438,8 @@ const ChannelPage = () => {
             }}></div>
         </div>
         <p className='text-xl flex flex-row font-medium gap-x-2 text-purple-400'>
-          <LoadingSpinner />{" Loading Channel..."}
+          <LoadingSpinner />
+          {' Loading Channel...'}
         </p>
       </div>
     )
@@ -455,7 +454,9 @@ const ChannelPage = () => {
           Channel Not Found
         </h2>
         <p className='text-gray-400 mb-6 text-center max-w-md'>
-          The channel you're looking for doesn't exist or may have been removed.
+          {
+            'The channel you&apos;re looking for doesn&apos;t exist or may have been removed.'
+          }
         </p>
         <Button
           onClick={handleBackNavigation}
@@ -626,26 +627,27 @@ const ChannelPage = () => {
 
                             <div className='flex flex-col items-end gap-4'>
                               {/* Vote Button with loading state */}
-                              {!proposal.isApproved && (address !== proposal.createdBy) && (
-                                <Button
-                                  onClick={() =>
-                                    handleVoteProposal(proposal.id)
-                                  }
-                                  className='bg-purple-600 hover:bg-purple-700 text-white px-8 flex items-center gap-2'
-                                  disabled={
-                                    proposal.votes >= proposal.maxVotes ||
-                                    votingProposals[proposal.id]
-                                  }>
-                                  {votingProposals[proposal.id] ? (
-                                    <LoadingSpinner />
-                                  ) : (
-                                    <ThumbsUp className='w-4 h-4 mr-2' />
-                                  )}
-                                  {votingProposals[proposal.id]
-                                    ? 'Voting...'
-                                    : 'Vote'}
-                                </Button>
-                              )}
+                              {!proposal.isApproved &&
+                                address !== proposal.createdBy && (
+                                  <Button
+                                    onClick={() =>
+                                      handleVoteProposal(proposal.id)
+                                    }
+                                    className='bg-purple-600 hover:bg-purple-700 text-white px-8 flex items-center gap-2'
+                                    disabled={
+                                      proposal.votes >= proposal.maxVotes ||
+                                      votingProposals[proposal.id]
+                                    }>
+                                    {votingProposals[proposal.id] ? (
+                                      <LoadingSpinner />
+                                    ) : (
+                                      <ThumbsUp className='w-4 h-4 mr-2' />
+                                    )}
+                                    {votingProposals[proposal.id]
+                                      ? 'Voting...'
+                                      : 'Vote'}
+                                  </Button>
+                                )}
 
                               {/* Vote Progress */}
                               <div className='w-full max-w-[200px]'>
@@ -826,7 +828,9 @@ const ChannelPage = () => {
                           size='w-8 h-8 mb-2'
                           className='text-gray-500'
                         />
-                        <p className='text-gray-400'>Processing document...</p>
+                        <p className='text-gray-400'>
+                          {'Processing document...'}
+                        </p>
                       </div>
                     ) : proposalForm.document ? (
                       <div className='flex items-center justify-center gap-2 text-purple-400'>

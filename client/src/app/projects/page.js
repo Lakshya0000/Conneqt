@@ -317,8 +317,8 @@ const Page = () => {
                 No research papers yet
               </h3>
               <p className='text-gray-500 max-w-md mx-auto'>
-                Create your first research paper by clicking the "New Paper"
-                button above.
+                {`Create your first research paper by clicking the "New Paper"
+                button above.`}
               </p>
             </div>
           ) : null}
