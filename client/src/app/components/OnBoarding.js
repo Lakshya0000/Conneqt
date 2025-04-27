@@ -204,7 +204,7 @@ export function OnBoarding({ onComplete }) {
           </Button>
         </div>
         <p className='mt-2'>
-          Everything looks good? Click 'Continue to Dashboard' to proceed.
+          {"Everything looks good? Click 'Continue to Dashboard' to proceed."}
         </p>
       </>
     )
@@ -236,7 +236,7 @@ export function OnBoarding({ onComplete }) {
             </div>
           </div>
         </div>
-        <p className='mt-2'>Click 'Continue to Dashboard' to proceed.</p>
+        <p className='mt-2'>{"Click 'Continue to Dashboard' to proceed."}</p>
       </>
     )
     setShowEditModal(false)
@@ -316,8 +316,6 @@ export function OnBoarding({ onComplete }) {
               accept='image/*'
               className='hidden'
             />
-
-            {/* Show larger preview if image exists */}
             {userData.imageUrl ? (
               <div className='flex flex-col items-center'>
                 <div className='relative w-32 h-32 rounded-full overflow-hidden border-2 border-purple-400 mb-4'>
@@ -350,7 +348,7 @@ export function OnBoarding({ onComplete }) {
                 {loading ? (
                   <>
                     <Loader2 className='h-4 w-4 animate-spin' />
-                    <span>Uploading...</span>
+                    <span>{"Uploading..."}</span>
                   </>
                 ) : (
                   <>
@@ -401,7 +399,7 @@ export function OnBoarding({ onComplete }) {
               {loading ? (
                 <>
                   <Loader2 className='h-4 w-4 animate-spin mr-2' />
-                  <span>Creating Profile...</span>
+                  <span>{"Creating Profile..."}</span>
                 </>
               ) : (
                 <span>Continue to Dashboard</span>

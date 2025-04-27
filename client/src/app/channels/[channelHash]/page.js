@@ -317,18 +317,18 @@ const ChannelPage = () => {
       }
 
       // Show uploading toast
-      proposalToast = toast.loading('Uploading document to IPFS...')
+      proposalToast = toast.loading("Uploading document to IPFS...")
 
       const docLink = await uploadToIpfs(document)
 
       toast.dismiss(proposalToast)
-      proposalToast = toast.loading('Preparing proposal metadata...')
+      proposalToast = toast.loading("Preparing proposal metadata...")
 
       const proposalUri = await uploadToIpfsJson({ title, docLink })
 
       toast.dismiss(proposalToast)
       proposalToast = toast.loading(
-        'Submitting proposal to blockchain...'
+        "Submitting proposal to blockchain..."
       )
 
       const txr = await writeContract(config, {
@@ -440,7 +440,7 @@ const ChannelPage = () => {
             }}></div>
         </div>
         <p className='text-xl flex flex-row font-medium gap-x-2 text-purple-400'>
-          <LoadingSpinner />{' Loading Channel...'}
+          <LoadingSpinner />{" Loading Channel..."}
         </p>
       </div>
     )
