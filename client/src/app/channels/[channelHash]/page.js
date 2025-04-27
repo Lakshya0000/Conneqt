@@ -149,7 +149,7 @@ const ChannelPage = () => {
           const proposal = proposalD.result
           const { title, docLink } = await getJsonFromIpfs(proposal[5])
           return {
-            id: Number(index + 1),
+            id: Number(proposalIds[index]), 
             title,
             description: proposal[0],
             createdBy: proposal[1],

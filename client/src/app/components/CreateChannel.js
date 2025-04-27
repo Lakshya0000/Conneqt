@@ -14,7 +14,6 @@ import { useWalletContext } from '@/context/WalletContext'
 import { waitForTransactionReceipt, writeContract } from 'wagmi/actions'
 
 const CreateChannel = () => {
-  // State management
   const [showModal, setShowModal] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
   const [hasProfile, setHasProfile] = useState(false)
