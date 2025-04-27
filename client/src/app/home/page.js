@@ -57,11 +57,7 @@ export default function Home() {
       return;
     }
     console.log('Profile data Home:', profileData)
-  }, [isConnected, loading, router])
-
-  if (loading) {
-    return <Loader />
-  }
+  }, [isConnected, router])
 
   return (
     <div className='min-h-screen bg-gradient-to-b from-gray-950 to-black text-white overflow-x-hidden relative'>

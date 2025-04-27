@@ -1,5 +1,5 @@
 import { OnchainKitProvider } from "@coinbase/onchainkit";
-import { base, baseSepolia } from "viem/chains";
+import { base, baseSepolia, sepolia } from "viem/chains";
 
 export function Provider({ children }) {
     const config={

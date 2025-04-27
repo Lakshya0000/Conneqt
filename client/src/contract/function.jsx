@@ -164,4 +164,16 @@ export const totalProposalsConfig = {
   functionName: "nextProposalId"
 }
 
+export const totalResearchesConfig = {
+  address: collabAddress,
+  abi: collabABI,
+  functionName: "_nextTokenId"
+}
+
+export const checkOwnerConfig = {
+  address: collabAddress,
+  abi: collabABI,
+  functionName: "ownerOf"
+}
+
 

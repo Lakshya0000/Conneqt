@@ -36,7 +36,7 @@ const Navbar = () => {
                               Channels
                             </span>
                           </Link>
-                          <Link href='#projects'>
+                          <Link href='/projects'>
                             <span className='hover:text-purple-400 transition-colors'>
                               Projects
                             </span>

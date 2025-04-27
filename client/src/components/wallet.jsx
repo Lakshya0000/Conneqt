@@ -34,14 +34,6 @@ const WalletProvider = () => {
 
   return (
     <Wallet className='flex items-center rounded-full bg-gradient-to-r from-purple-600 to-pink-600 text-white hover:from-purple-500 hover:to-pink-500 transition-all duration-300 shadow-md hover:shadow-xl hover:shadow-purple-500/30 cursor-pointer border border-purple-400/20'>
-      {loading ? (
-        // Show loader when loading
-        <div className='flex items-center px-4 py-1.5'>
-          <Loader2 className='h-4 w-4 animate-spin mr-2 text-white/90' />
-          <span className='text-sm font-medium'>Loading...</span>
-        </div>
-      ) : (
-        // Show connected wallet UI
         <ConnectWallet className='rounded-full bg-transparent flex items-center gap-2.5 pl-1 pr-3 py-1'>
           {hasProfileImage ? (
             // Custom profile image
@@ -71,7 +63,7 @@ const WalletProvider = () => {
             <span className='font-medium text-sm text-white/95'>Wallet</span>
           )}
         </ConnectWallet>
-      )}
+      
 
       <WalletDropdown>
         <div className='px-6 py-5 flex flex-col items-center bg-gray-900 border-b border-gray-800'>
