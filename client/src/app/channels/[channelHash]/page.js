@@ -13,11 +13,6 @@ import {
   AlertCircle,
   ThumbsUp,
   ArrowLeft,
-  Calendar,
-  User,
-  Clock,
-  ChevronRight,
-  Download,
   ExternalLink,
 } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
@@ -43,6 +38,7 @@ import {
 } from '@/contract/function'
 import { getJsonFromIpfs, uploadToIpfs, uploadToIpfsJson } from '@/contract'
 import { useWalletContext } from '@/context/WalletContext'
+import Loader from '@/components/loader'
 
 const ProposalSkeleton = () => (
   <div className='bg-gray-900/50 border border-purple-400/10 rounded-xl p-6 backdrop-blur-sm overflow-hidden space-y-4'>
@@ -113,9 +109,6 @@ const ChannelPage = () => {
           args: [channelHash, Number(profileData[0])],
         })
         return joined
-      } else {
-        if (address) router.push('/home')
-        else router.push('/')
       }
     } catch (e) {
       console.log('Joining Status Error : ', e)
@@ -150,7 +143,7 @@ const ChannelPage = () => {
       const proposalsData = await readContracts(config, {
         contracts: proposalConfigs,
       })
-
+      console.log('Proposals Data : ', proposalsData)
       const updProposals = await Promise.all(
         proposalsData.map(async (proposalD, index) => {
           const proposal = proposalD.result
@@ -161,7 +154,7 @@ const ChannelPage = () => {
             description: proposal[0],
             createdBy: proposal[1],
             votes: Number(proposal[2]),
-            maxVotes: Number(proposal[3]) || 3,
+            maxVotes: Number(proposal[3]) || 1,
             isApproved: proposal[4],
             docLink,
           }
@@ -211,14 +204,6 @@ const ChannelPage = () => {
         setIsLoading(true)
         setProposalLoading(true)
 
-        if (!address || !profileData || profileData.length === 0) {
-          if (!profileLoading) {
-            toast.error('Please connect your wallet')
-            router.push('/')
-          }
-          return
-        }
-
         if (channelHash === '') {
           router.push('/channels')
           return
@@ -235,7 +220,9 @@ const ChannelPage = () => {
       }
     }
 
-    fetchChannelData()
+    if(profileData && profileData.length > 0) {
+      fetchChannelData()
+    }
   }, [channelHash, router, profileData])
 
   // Handle tab change with loading state
@@ -277,9 +264,6 @@ const ChannelPage = () => {
         } else {
           toast.error('Failed to join the channel')
         }
-      } else {
-        if (address) router.push('/home')
-        else router.push('/')
       }
     } catch (e) {
       toast.error(e.message || e.details || 'Failed to join channel')
@@ -323,7 +307,7 @@ const ChannelPage = () => {
   const handleProposalSubmit = async (e) => {
     e.preventDefault()
     setSubmittingProposal(true)
-
+    let proposalToast = null
     try {
       const { title, description, document } = proposalForm
       if (!title || !description || !document) {
@@ -333,17 +317,17 @@ const ChannelPage = () => {
       }
 
       // Show uploading toast
-      const uploadingToast = toast.loading('Uploading document to IPFS...')
+      proposalToast = toast.loading('Uploading document to IPFS...')
 
       const docLink = await uploadToIpfs(document)
 
-      toast.dismiss(uploadingToast)
-      const metadataToast = toast.loading('Preparing proposal metadata...')
+      toast.dismiss(proposalToast)
+      proposalToast = toast.loading('Preparing proposal metadata...')
 
       const proposalUri = await uploadToIpfsJson({ title, docLink })
 
-      toast.dismiss(metadataToast)
-      const submittingToast = toast.loading(
+      toast.dismiss(proposalToast)
+      proposalToast = toast.loading(
         'Submitting proposal to blockchain...'
       )
 
@@ -352,23 +336,15 @@ const ChannelPage = () => {
         args: [channelHash, description, proposalUri],
       })
 
-      if (!txr) {
-        toast.dismiss(submittingToast)
-        toast.error('Transaction refused')
-        return
-      }
-
       await waitForTransactionReceipt(config, {
         hash: txr,
       })
 
-      toast.dismiss(submittingToast)
+      toast.dismiss(proposalToast)
       toast.success('Proposal submitted successfully')
-
+      setShowProposalModal(false)
       // Refresh data
       await fetchCompany()
-
-      setShowProposalModal(false)
       setProposalForm({
         title: '',
         description: '',
@@ -376,9 +352,11 @@ const ChannelPage = () => {
         documentName: '',
       })
     } catch (e) {
+      if(proposalToast) toast.dismiss(proposalToast)
       console.log(e)
       toast.error('Error submitting proposal')
     } finally {
+      setShowProposalModal(false)
       setSubmittingProposal(false)
     }
   }
@@ -390,22 +368,16 @@ const ChannelPage = () => {
       ...prev,
       [proposalId]: true,
     }))
-
+    let votingToast = null
     try {
       console.log('Proposal ID : ', proposalId)
 
-      const votingToast = toast.loading('Processing your vote...')
+      votingToast = toast.loading('Processing your vote...')
 
       const txr = await writeContract(config, {
         ...voteOnProposalConfig,
         args: [Number(proposalId), true],
       })
-
-      if (!txr) {
-        toast.dismiss(votingToast)
-        toast.error('Transaction refused')
-        return
-      }
 
       await waitForTransactionReceipt(config, {
         hash: txr,
@@ -413,15 +385,13 @@ const ChannelPage = () => {
 
       toast.dismiss(votingToast)
       toast.success('Voted successfully')
-
-      // Refresh only proposals, not the whole page
       setProposalLoading(true)
       await fetchCompany()
     } catch (e) {
+      if(votingToast) toast.dismiss(votingToast)
       console.log('Error voting on proposal : ', e)
-      toast.error(e.message || e.details || 'Failed to vote on proposal')
+      toast.error('Failed to vote on proposal')
     } finally {
-      // Clear the loading state for this proposal
       setVotingProposals((prev) => ({
         ...prev,
         [proposalId]: false,
@@ -454,7 +424,10 @@ const ChannelPage = () => {
   )
 
   // Loading state
-  if (isLoading || profileLoading) {
+  if(profileLoading || !profileData || profileData.length === 0) {
+    return <Loader />
+  }
+  if (isLoading) {
     return (
       <div className='flex flex-col items-center justify-center min-h-screen bg-gray-950'>
         <div className='relative w-20 h-20 mb-6'>
@@ -467,8 +440,7 @@ const ChannelPage = () => {
             }}></div>
         </div>
         <p className='text-xl flex flex-row font-medium gap-x-2 text-purple-400'>
-          <LoadingSpinner />{' '}
-          {profileLoading ? 'Loading Profile...' : 'Loading Channel...'}
+          <LoadingSpinner />{' Loading Channel...'}
         </p>
       </div>
     )
@@ -654,7 +626,7 @@ const ChannelPage = () => {
 
                             <div className='flex flex-col items-end gap-4'>
                               {/* Vote Button with loading state */}
-                              {!proposal.isApproved && (
+                              {!proposal.isApproved && (address !== proposal.createdBy) && (
                                 <Button
                                   onClick={() =>
                                     handleVoteProposal(proposal.id)

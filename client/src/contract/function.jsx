@@ -8,6 +8,12 @@ import { companyAddress } from "@/contract/contract";
 import { escrowABI } from "@/contract/contract";
 import { escrowAddress } from "@/contract/contract";
 
+
+export const getTotalFundingConfig = {
+  address: escrowAddress,
+  abi: escrowABI,
+  functionName: "nextProjectId"
+}
 export const createProfileConfig = {
   address: companyAddress,
   abi: companyABI,

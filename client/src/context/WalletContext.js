@@ -1,6 +1,7 @@
 import { getJsonFromIpfs } from '@/contract'
 import { getProfileConfig } from '@/contract/function'
 import { createContext, useContext, useEffect, useState } from 'react'
+import { toast } from 'sonner'
 import { idchain } from 'viem/chains'
 import { useAccount, useConfig } from 'wagmi'
 import { readContract } from 'wagmi/actions'
@@ -35,8 +36,13 @@ export function ChannelProvider({ children }) {
       setProfileData(profile)
       setLoading(false)
     } catch (e) {
-      console.log('Type of error: ', typeof e)
-      console.log(e)
+      // console.log('Type of error: ', typeof e)
+      // console.log(e)
+      // console.log(e.reason)
+      // console.log(e.message)
+      toast.error('Profile Not Found. Please create a new one.')
+      setProfileData([])
+      setProfileDetails({})
       setLoading(false)
     }
   }

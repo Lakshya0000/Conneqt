@@ -6,10 +6,13 @@ import Image from 'next/image'
 import Link from 'next/link'
 import { MessageSquare, ArrowUpRight, Hash } from 'lucide-react'
 import { motion } from 'framer-motion'
-import { useReadContract, useReadContracts } from 'wagmi'
+import { useConfig} from 'wagmi'
 import { getCompanyConfig, totalCompaniesConfig } from '@/contract/function'
 import { toast } from 'sonner'
 import { getJsonFromIpfs } from '@/contract'
+import { readContract, readContracts } from 'wagmi/actions'
+import { useWalletContext } from '@/context/WalletContext'
+import Loader from '@/components/loader'
 
 const staggerAnimation = {
   hidden: { opacity: 0 },
@@ -106,30 +109,6 @@ const ChannelCard = ({ channel }) => {
   )
 }
 
-const SkeletonCard = () => (
-  <div className="rounded-xl overflow-hidden border border-purple-400/10 bg-gradient-to-b from-gray-900/50 
-                  to-gray-950/50 h-full p-6 relative">
-    <div className="absolute inset-0 bg-grid-white/[0.02] bg-[size:20px_20px]" />
-
-    <div className="relative space-y-6">
-      <div className="flex items-center gap-4">
-        <div className="w-14 h-14 rounded-full bg-gradient-to-br from-gray-800 to-gray-700 animate-pulse" />
-        <div className="h-7 bg-gradient-to-r from-gray-800 to-gray-700 animate-pulse rounded-lg w-32" />
-      </div>
-
-      <div className="space-y-2">
-        <div className="h-4 bg-gradient-to-r from-gray-800 to-gray-700 animate-pulse rounded-lg w-full" />
-        <div className="h-4 bg-gradient-to-r from-gray-800 to-gray-700 animate-pulse rounded-lg w-4/5" />
-      </div>
-
-      <div className="h-px w-full bg-gradient-to-r from-transparent via-purple-400/10 to-transparent" />
-
-      <div className="flex justify-end pt-2">
-        <div className="h-10 w-32 bg-gradient-to-r from-purple-600/20 to-pink-600/20 animate-pulse rounded-full" />
-      </div>
-    </div>
-  </div>
-)
 
 const LoadingState = () => (
   <div className='flex flex-col items-center justify-center py-12'>
@@ -152,10 +131,9 @@ const LoadingState = () => (
 const Page = () => {
   const [channels, setChannels] = useState([])
   const [isLoading, setIsLoading] = useState(true)
-  const [configs, setConfigs] = useState([])
-  // Fetch channels data
-  const { data: totalCompanies } = useReadContract({ ...totalCompaniesConfig })
-  const getCompanyConfigs = () => {
+  const config = useConfig();
+  const {loading : profileLoading, profileData} = useWalletContext();
+  const getCompanyConfigs = (totalCompanies) => {
     if (!totalCompanies) return [];
     const companyConfigs = []
     for (let i = 1; i <= Number(totalCompanies); i++) {
@@ -165,40 +143,45 @@ const Page = () => {
     }
     return companyConfigs;
   }
-  useEffect(() => {
-    if (totalCompanies && Number(totalCompanies) > 0) {
-      const companyConfigs = getCompanyConfigs()
-      // console.log("companyConfigs : ",companyConfigs)
-      setConfigs(companyConfigs)
-    }
-    // console.log("totalCompanies : ",totalCompanies)
-  }, [totalCompanies])
-  const { data: channelsData, isLoading: channelsLoading, isError: companiesError } = useReadContracts({
-    contracts: configs
-  })
-  useEffect(() => {
-    if (channelsLoading) return setIsLoading(true);
-    if (companiesError) {
-      toast.error("Error fetching channels data")
-      setIsLoading(false)
-    }
-    if (channelsData && channelsData.length > 0) {
-      const processChannels = async () => {
-        const channelsRes = channelsData.map(async (channel) => {
-          // console.log("channel : ",channel)
-          const channelData = await getJsonFromIpfs(channel.result[1]);
-          return { ...channelData, id: (Number(channel.result[0])), uri: channel.result[1] };
+  const fetchCompanies = async () => {
+    setIsLoading(true)
+    try{
+      console.log("Fetching companies...")
+      const totalCompanies = await readContract(config, {
+        ...totalCompaniesConfig
+      })
+      const companyConfigs = getCompanyConfigs(totalCompanies)
+      const companies = await readContracts(config, {
+        contracts: companyConfigs
+      })
+      console.log("Companies: ", companies)
+      const channelsRes = await Promise.all(
+        companies.map(async (data)=>{
+          const channel = data.result;
+          const channelData = await getJsonFromIpfs(channel[1]);
+          return { ...channelData, id: (Number(channel[0])), uri: channel[1] };
         })
-        setChannels(await Promise.all(channelsRes))
-      }
-      processChannels()
+      )
+      console.log("Channels: ", channelsRes)
+      setChannels(channelsRes)
       setIsLoading(false)
     }
-    // console.log("test : ",channelsData)
-  }, [channelsData, channelsLoading, companiesError])
-
+    catch(e){
+      toast.error("Error fetching channels data")
+      setChannels([])
+      setIsLoading(false)
+    }
+  }
+  useEffect(()=>{
+    if(!profileLoading && profileData && profileData.length > 0){
+      fetchCompanies()
+    }
+  },[profileData])
+  if(profileLoading){
+    return <Loader />
+  }
   return (
-    <div className='mt-20 min-h-screen bg-gray-950'>
+    <div className='mt-10 min-h-screen bg-gray-950'>
       <div className='max-w-7xl mx-auto px-6 py-20'>
         <div className='text-center mb-12'>
           <h1 className='text-4xl md:text-5xl font-bold bg-gradient-to-r from-purple-400 to-pink-600 text-transparent bg-clip-text mb-4'>
@@ -235,9 +218,6 @@ const Page = () => {
             <p className='text-gray-400 mb-6'>
               Be the first to create a channel and start the conversation.
             </p>
-            <button className='px-6 py-3 bg-gradient-to-r from-purple-600 to-pink-600 rounded-full text-white font-medium hover:from-purple-700 hover:to-pink-700 transition-all transform hover:scale-105'>
-              Create Channel
-            </button>
           </div>
         )}
       </div>

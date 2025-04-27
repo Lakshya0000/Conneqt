@@ -18,6 +18,7 @@ import {
   totalResearchesConfig,
 } from '@/contract/function'
 import { getJsonFromIpfs, uploadToIpfsJson } from '@/contract'
+import Loader from '@/components/loader'
 
 // Animated loader component - Similar to landing page
 const ResearchLoader = () => {
@@ -76,21 +77,6 @@ const Page = () => {
   const [newPaperTitle, setNewPaperTitle] = useState('')
   const [newPaperContent, setNewPaperContent] = useState('')
   const [isSubmitting, setIsSubmitting] = useState(false)
-
-  useEffect(() => {
-    if (!isConnected) {
-      toast.warning('Please connect your wallet.')
-      return
-    }
-    if (profileLoading) return
-    if (isConnected && address) {
-      if (!profileData || profileData.length === 0) {
-        toast.info("You don't have a profile yet.")
-        router.push('/')
-        return
-      }
-    }
-  }, [isConnected, address, profileData, router])
 
   const fetchProjects = async () => {
     setLoading(true)
@@ -279,6 +265,10 @@ const Page = () => {
       </div>
     </motion.div>
   )
+
+  if(profileLoading || !profileData || profileData.length === 0) {
+    return <Loader />
+  }
 
   return (
     <div className='min-h-screen bg-gradient-to-b from-gray-950 to-black text-white mt-20'>

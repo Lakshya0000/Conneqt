@@ -1,13 +1,31 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { motion } from 'framer-motion'
 import Link from 'next/link'
 
 import WalletProvider from '@/components/wallet';
 import { Network } from 'lucide-react';
 import { useWalletContext } from '@/context/WalletContext';
+import { useAccount } from 'wagmi';
+import { useRouter } from 'next/navigation';
+import { toast } from 'sonner';
 
 const Navbar = () => {
-    const {profileData} = useWalletContext()
+    const { address, isConnected } = useAccount()
+    const router = useRouter()
+    const {profileData, loading} = useWalletContext()
+    useEffect(() => {
+        if (loading) return;
+        if (!isConnected) {
+          toast.info('Please connect your wallet to access the app.')
+          router.push('/')
+          return;
+        }
+        if (!profileData || profileData.length === 0) {
+          router.push('/')
+          return;
+        }
+        console.log('Profile data Home:', profileData)
+      }, [isConnected, router, address, profileData])
     return (
         <div>
              {/* Navigation */}

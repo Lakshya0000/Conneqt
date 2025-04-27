@@ -81,7 +81,7 @@ export default function Home() {
         setShowModal(true)
       }
     }
-  }, [isConnected, address, loading, profileData, router, isClient])
+  }, [isConnected, address, profileData, router, isClient])
 
   // Handle onboarding completion
   const handleOnboardingComplete = async () => {

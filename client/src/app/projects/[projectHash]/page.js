@@ -33,6 +33,7 @@ import {
 } from '@/contract/function'
 import { getJsonFromIpfs, uploadToIpfsJson } from '@/contract'
 import { useWalletContext } from '@/context/WalletContext'
+import Loader from '@/components/loader'
 
 const getDiff = (oldText, newText) => {
   return Diff.diffWords(oldText, newText)
@@ -169,22 +170,8 @@ const Page = () => {
     }
   }
   useEffect(() => {
-      if (!isConnected) {
-        toast.warning('Please connect your wallet.')
-        return
-      }
-      if (profileLoading) return
-      if (isConnected && address) {
-        if (!profileData || profileData.length === 0) {
-          toast.info("You don't have a profile yet.")
-          router.push('/')
-          return
-        }
-      }
-    }, [isConnected, address, profileData, router])
-  useEffect(() => {
     // Mock data fetch
-    if (projectHash === '') {
+    if(profileData && profileData.length>0){if (projectHash === '') {
       router.push('/projects')
       return
     }
@@ -194,8 +181,8 @@ const Page = () => {
       router.push('/projects')
       return
     }
-    fetchProject(id)
-  }, [projectHash, address, isConnected])
+    fetchProject(id)}
+  }, [projectHash, address, isConnected, profileData])
 
   const handleEdit = () => {
     setIsEditing(true)
@@ -274,6 +261,10 @@ const Page = () => {
     finally{
         setIsSubmittingCollab(false)
     }
+  }
+
+  if(profileLoading || !profileData || profileData.length === 0){
+    return <Loader />
   }
 
   return (
