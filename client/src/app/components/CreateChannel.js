@@ -8,8 +8,10 @@ import { Plus, X, Upload, Loader2, ImageIcon, FileText } from 'lucide-react'
 import Image from 'next/image'
 import { toast } from 'sonner'
 import { uploadToIpfs, uploadToIpfsJson } from '@/contract'
-import { useAccount, useReadContract, useWriteContract } from 'wagmi'
-import { createCompanyConfig, getProfileConfig } from '@/contract/function'
+import { useAccount, useConfig } from 'wagmi'
+import { createCompanyConfig } from '@/contract/function'
+import { useWalletContext } from '@/context/WalletContext'
+import { waitForTransactionReceipt, writeContract } from 'wagmi/actions'
 
 const CreateChannel = () => {
   // State management
@@ -32,15 +34,17 @@ const CreateChannel = () => {
   // Refs for file inputs
   const profileIconRef = useRef(null)
   const bannerImageRef = useRef(null)
-  const {writeContractAsync} = useWriteContract();
+  const config = useConfig()
   const {address} = useAccount();
-  const {data : profileData, isLoading: profileLoading} = useReadContract({...getProfileConfig,args:[address],enabled: !!address});
+  const {loading : profileLoading, profileData} = useWalletContext()
   useEffect(() => {
-    if (profileData && !profileLoading) {
-        console.log("Profile data:", profileData);
+    if (profileData && !profileLoading && profileData.length > 0) {
       setHasProfile(true)
     }
-  }, [profileData, profileLoading])
+    else{
+      setHasProfile(false)
+    }
+  }, [profileData])
   // Handle input changes
   const handleInputChange = (e) => {
     const { name, value } = e.target
@@ -89,7 +93,7 @@ const CreateChannel = () => {
       toast.error('Please fill in all required fields')
       return
     }
-
+    let comapnyToast = toast.loading('Creating channel...')
     try {
       setIsLoading(true)
 
@@ -118,8 +122,11 @@ const CreateChannel = () => {
       // Upload metadata to IPFS
       const metadataUrl = await uploadToIpfsJson(channelMetadata)
       console.log(metadataUrl)
-      const hash = await writeContractAsync({...createCompanyConfig,args:[metadataUrl]})
-      console.log(hash)
+      const hash = await writeContract(config,{...createCompanyConfig,args:[metadataUrl]})
+      await waitForTransactionReceipt(config, {
+        hash: hash
+      })
+      toast.dismiss(comapnyToast)
       toast.success('Channel created successfully!')
 
       // Reset form and close modal
@@ -134,6 +141,7 @@ const CreateChannel = () => {
       })
       setShowModal(false)
     } catch (error) {
+      if(companyToast) toast.dismiss(companyToast)
       console.error('Error creating channel:', error)
       toast.error('Failed to create channel. Please try again.')
     } finally {

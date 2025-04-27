@@ -1,8 +1,5 @@
-import { useReadContract, useWriteContract, useReadContracts } from "wagmi";
 import { collabAddress } from "@/contract/contract";
 import { collabABI } from "@/contract/contract";
-import { desciAddress } from "@/contract/contract";
-import { desciABI } from "@/contract/contract";
 import { companyABI } from "@/contract/contract";
 import { companyAddress } from "@/contract/contract";
 import { escrowABI } from "@/contract/contract";

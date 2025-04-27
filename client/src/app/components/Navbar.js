@@ -59,13 +59,8 @@ const Navbar = () => {
                               Projects
                             </span>
                           </Link>
-                          <Link href='#collaboration'>
-                            <span className='hover:text-purple-400 transition-colors'>
-                              Collaboration
-                            </span>
-                          </Link>
                           <Link href='/research'>
-                            <button className='px-4 py-2 bg-purple-600 hover:bg-purple-700 transition duration-200 rounded-lg text-white'>
+                            <button className='hover:text-purple-400 transition-colors'>
                               Fund Research
                             </button>
                           </Link>
