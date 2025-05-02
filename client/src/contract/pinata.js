@@ -1,4 +1,6 @@
 import axios from "axios";
+const pinata_api_key = process.env.NEXT_PUBLIC_PINATA_API_KEY
+const pinata_secret_api_key = process.env.NEXT_PUBLIC_PINATA_SECRET_KEY
 export const uploadToIpfs = async (file) => {
     if (file) {
       try {
@@ -9,8 +11,8 @@ export const uploadToIpfs = async (file) => {
           fileData,
           {
             headers: {
-              pinata_api_key: "35cb1bf7be19d2a8fa0d",
-              pinata_secret_api_key: "2c2e9e43bca7a619154cb48e8b060c5643ea6220d0b7c9deb565fa491b3b3a50",
+              pinata_api_key,
+              pinata_secret_api_key,
               "Content-Type": "multipart/form-data",
             },
           }
@@ -30,8 +32,8 @@ export const uploadToIpfs = async (file) => {
       try{
         const res = await axios.post('https://api.pinata.cloud/pinning/pinJSONToIPFS',jsonData,{
           headers:{
-            pinata_api_key : '35cb1bf7be19d2a8fa0d',
-            pinata_secret_api_key : '2c2e9e43bca7a619154cb48e8b060c5643ea6220d0b7c9deb565fa491b3b3a50',
+            pinata_api_key,
+            pinata_secret_api_key,
             'Content-Type': 'application/json',
           }
         })
